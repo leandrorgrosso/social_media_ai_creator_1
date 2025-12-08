@@ -1,0 +1,101 @@
+import React, { useState } from 'react';
+import InputForm from './components/InputForm';
+import PostResult from './components/PostResult';
+import ImageGenerator from './components/ImageGenerator';
+import { SocialPostInput, GeneratedPostContent } from './types';
+import { generatePostContent } from './services/geminiService';
+
+const App: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [content, setContent] = useState<GeneratedPostContent | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFormSubmit = async (inputData: SocialPostInput) => {
+    setIsLoading(true);
+    setError(null);
+    setContent(null);
+
+    try {
+      const result = await generatePostContent(inputData);
+      setContent(result);
+    } catch (err) {
+      console.error(err);
+      setError("Falha ao gerar conteúdo. Verifique se sua chave de API é válida e tente novamente.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#f8f9fa] pb-20">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">
+              AI
+            </div>
+            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">
+              Criador de Posts
+            </h1>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          {/* Left Column: Input Form */}
+          <div className="lg:col-span-4 lg:sticky lg:top-24 h-fit">
+             <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Defina seu Post</h2>
+                <p className="text-gray-500 text-sm">Preencha os detalhes abaixo para deixar o Gemini criar o conteúdo perfeito para suas redes sociais.</p>
+             </div>
+            <InputForm onSubmit={handleFormSubmit} isLoading={isLoading} />
+            {error && (
+                <div className="mt-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded-md">
+                    <p className="font-bold">Erro</p>
+                    <p>{error}</p>
+                </div>
+            )}
+          </div>
+
+          {/* Right Column: Results */}
+          <div className="lg:col-span-8">
+             {!content && !isLoading && (
+                <div className="flex flex-col items-center justify-center h-[500px] bg-white rounded-3xl border-2 border-dashed border-gray-200 text-center p-8">
+                    <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                        <span className="text-4xl">✨</span>
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Pronto para Criar?</h3>
+                    <p className="text-gray-500 max-w-md">Digite seu tópico à esquerda e veja a IA gerar títulos, legendas e conceitos visuais prontos para engajamento.</p>
+                </div>
+             )}
+
+             {isLoading && (
+                 <div className="flex flex-col items-center justify-center h-[500px] space-y-4">
+                    <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
+                    <p className="text-purple-600 font-medium animate-pulse">Analisando tendências e criando o texto...</p>
+                 </div>
+             )}
+
+            {content && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="h-full">
+                  <PostResult content={content} />
+                </div>
+                <div className="h-full">
+                  <ImageGenerator initialPrompt={content.visual_prompt} />
+                </div>
+              </div>
+            )}
+          </div>
+
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default App;
