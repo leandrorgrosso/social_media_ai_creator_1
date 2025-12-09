@@ -237,6 +237,13 @@ ${content.variations.funny_version}`;
                   </>
                ) : (
                  <>
+                   {/* Contador de Caracteres */}
+                   <span className={`text-[10px] sm:text-xs font-mono font-medium mr-2 hidden sm:inline-block ${
+                      editedCaption.length > 2200 ? 'text-red-500 font-bold' : 'text-gray-400 dark:text-gray-500'
+                   }`}>
+                      {editedCaption.length}/2200
+                   </span>
+
                    <button
                      onClick={cancelEditing}
                      className="text-xs px-2.5 py-1.5 rounded-lg transition-all bg-gray-100 hover:bg-gray-200 text-gray-600 border border-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300 dark:border-gray-600 font-medium flex items-center gap-1.5"
@@ -253,7 +260,7 @@ ${content.variations.funny_version}`;
                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                      </svg>
-                     <span>Salvar Alterações</span>
+                     <span>Salvar</span>
                    </button>
                  </>
                )}
@@ -269,13 +276,27 @@ ${content.variations.funny_version}`;
 
             {/* Legenda (Modo Visualização ou Edição) */}
             {isEditing ? (
-              <textarea
-                value={editedCaption}
-                onChange={(e) => setEditedCaption(e.target.value)}
-                className="w-full min-h-[200px] p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 text-sm leading-relaxed focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none resize-y transition-colors"
-                placeholder="Edite sua legenda aqui..."
-                autoFocus
-              />
+              <div className="relative">
+                <textarea
+                  value={editedCaption}
+                  onChange={(e) => setEditedCaption(e.target.value)}
+                  className={`w-full min-h-[200px] p-3 rounded-lg border bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 text-sm leading-relaxed focus:ring-2 focus:ring-purple-500 outline-none resize-y transition-colors ${
+                    editedCaption.length > 2200 
+                      ? 'border-red-300 dark:border-red-800 focus:border-red-500' 
+                      : 'border-gray-300 dark:border-gray-600 focus:border-transparent'
+                  }`}
+                  placeholder="Edite sua legenda aqui..."
+                  autoFocus
+                />
+                {/* Contador visível no mobile abaixo do textarea */}
+                <div className="text-right mt-1 sm:hidden">
+                  <span className={`text-[10px] font-mono font-medium ${
+                      editedCaption.length > 2200 ? 'text-red-500 font-bold' : 'text-gray-400 dark:text-gray-500'
+                   }`}>
+                      {editedCaption.length}/2200
+                   </span>
+                </div>
+              </div>
             ) : (
               <div className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                 {content.caption}

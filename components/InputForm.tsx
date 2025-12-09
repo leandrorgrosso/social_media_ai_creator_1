@@ -53,28 +53,29 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, savedPosts =
     onSubmit(formData);
   };
 
-  // Constantes de estilo para padronização rigorosa
-  const labelClasses = "block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 ml-1 tracking-wide transition-colors";
-  const inputBaseClasses = "w-full px-4 py-3.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-base text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200 outline-none appearance-none";
+  // Constantes de estilo para padronização rigorosa (Responsivo Mobile-First)
+  const labelClasses = "block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2 ml-1 tracking-wide transition-colors";
+  // Inputs: Text-base (16px) é crucial no mobile para evitar zoom automático do iOS. Padding reduzido levemente no mobile.
+  const inputBaseClasses = "w-full px-3 py-3 sm:px-4 sm:py-3.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-base text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200 outline-none appearance-none";
   const inputStateClasses = "focus:bg-white dark:focus:bg-gray-600 focus:border-purple-500 dark:focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 dark:focus:ring-purple-500/20 hover:border-purple-300 dark:hover:border-purple-400";
   const inputClasses = `${inputBaseClasses} ${inputStateClasses}`;
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 shadow-xl shadow-purple-900/5 dark:shadow-none rounded-2xl p-5 sm:p-6 md:p-8 w-full max-w-2xl mx-auto border border-white/50 dark:border-gray-700 relative overflow-visible flex flex-col h-full transition-colors">
+    <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 shadow-xl shadow-purple-900/5 dark:shadow-none rounded-2xl p-4 sm:p-6 md:p-8 w-full max-w-2xl mx-auto border border-white/50 dark:border-gray-700 relative overflow-visible flex flex-col h-full transition-colors">
       {/* Decorative gradient overlay */}
       <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500 rounded-t-2xl"></div>
 
-      <div className="mb-6 md:mb-8">
-        <h2 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-3 transition-colors">
-          <span className="text-2xl md:text-3xl bg-purple-100 dark:bg-purple-900/30 p-2.5 rounded-xl shadow-sm">✨</span> 
+      <div className="mb-5 sm:mb-6 md:mb-8">
+        <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2 sm:gap-3 transition-colors">
+          <span className="text-xl sm:text-2xl md:text-3xl bg-purple-100 dark:bg-purple-900/30 p-2 sm:p-2.5 rounded-xl shadow-sm">✨</span> 
           <span>Crie Conteúdo Mágico</span>
         </h2>
       </div>
       
-      <div className="space-y-5 md:space-y-8 flex-grow">
+      <div className="space-y-4 sm:space-y-6 md:space-y-8 flex-grow">
         {/* Full width row with History Dropdown */}
         <div className="group relative" ref={dropdownRef}>
-          <div className="flex justify-between items-center mb-2 ml-1">
+          <div className="flex justify-between items-center mb-1.5 sm:mb-2 ml-1">
             <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 tracking-wide transition-colors">Tema / Tópico</label>
             
             {recentTopics.length > 0 && (
@@ -127,8 +128,8 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, savedPosts =
           </div>
         </div>
 
-        {/* Two columns row - Responsive Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8">
+        {/* Two columns row - Responsive Grid (Gap ajustado para mobile) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
           <div className="group">
             <label className={labelClasses}>Nicho</label>
             <input
@@ -155,8 +156,8 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, savedPosts =
           </div>
         </div>
 
-        {/* Two columns row - Responsive Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8">
+        {/* Two columns row - Responsive Grid (Gap ajustado para mobile) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
            <div className="group relative">
             <label className={labelClasses}>Objetivo</label>
             <div className="relative">
@@ -208,11 +209,11 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, savedPosts =
         </div>
       </div>
 
-      <div className="mt-6 md:mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
+      <div className="mt-5 sm:mt-6 md:mt-8 pt-5 sm:pt-6 border-t border-gray-100 dark:border-gray-700">
         <button
           type="submit"
           disabled={isLoading}
-          className={`w-full py-4 px-6 rounded-xl text-white font-bold text-lg shadow-lg shadow-purple-500/20 dark:shadow-purple-900/30 hover:shadow-purple-500/40 transition-all duration-300 transform active:scale-[0.98] ${
+          className={`w-full py-3.5 sm:py-4 px-6 rounded-xl text-white font-bold text-base sm:text-lg shadow-lg shadow-purple-500/20 dark:shadow-purple-900/30 hover:shadow-purple-500/40 transition-all duration-300 transform active:scale-[0.98] ${
             isLoading ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed shadow-none' : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700'
           }`}
         >
