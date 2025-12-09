@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => {
   const apiKey = env.API_KEY || env.VITE_GEMINI_API_KEY || '';
 
   return {
-    plugins: [react()],
+    plugins: [react({ jsxRuntime: 'classic' })],
     define: {
       // Define a variável globalmente
       'process.env.API_KEY': JSON.stringify(apiKey)
