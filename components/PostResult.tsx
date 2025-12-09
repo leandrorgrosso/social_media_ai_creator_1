@@ -1,16 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GeneratedPostContent } from '../types';
 
 interface PostResultProps {
   content: GeneratedPostContent;
   onSave?: () => void;
+  onContentUpdate?: (newContent: GeneratedPostContent) => void;
   isSaved?: boolean;
   isSaving?: boolean;
 }
 
-const PostResult: React.FC<PostResultProps> = ({ content, onSave, isSaved, isSaving }) => {
+const PostResult: React.FC<PostResultProps> = ({ content, onSave, onContentUpdate, isSaved, isSaving }) => {
   // Estado para rastrear qual botão está exibindo o feedback de "Copiado!"
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Estados para Edição
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedCaption, setEditedCaption] = useState(content.caption);
+
+  // Sincronizar estado de edição quando o conteúdo muda (ex: novo post gerado ou selecionado do histórico)
+  useEffect(() => {
+    setEditedCaption(content.caption);
+    setIsEditing(false);
+  }, [content]);
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -20,6 +31,26 @@ const PostResult: React.FC<PostResultProps> = ({ content, onSave, isSaved, isSav
     setTimeout(() => {
       setCopiedId(null);
     }, 2000);
+  };
+
+  const startEditing = () => {
+    setEditedCaption(content.caption);
+    setIsEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setEditedCaption(content.caption);
+    setIsEditing(false);
+  };
+
+  const saveEditing = () => {
+    if (onContentUpdate) {
+      onContentUpdate({
+        ...content,
+        caption: editedCaption
+      });
+    }
+    setIsEditing(false);
   };
 
   const getFullContentText = () => {
@@ -174,29 +205,82 @@ ${content.variations.funny_version}`;
 
       <div className="flex-grow overflow-y-auto p-6 space-y-6 custom-scrollbar bg-gray-50/50 dark:bg-gray-900/20">
         
-        {/* SEÇÃO 1: CONTEÚDO PRINCIPAL (Card Unificado) */}
+        {/* SEÇÃO 1: CONTEÚDO PRINCIPAL (Card Unificado com Edição) */}
         <section className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
           <div className="bg-gray-50 dark:bg-gray-700/30 px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
-             <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Conteúdo Principal</span>
-             <CopyButton
-                text="Copiar Texto"
-                contentToCopy={`${content.title}\n\n${content.caption}`}
-                id="title_caption"
-                variant="default"
-              />
+             <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Conteúdo Principal</span>
+                {isEditing && (
+                  <span className="text-[10px] bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200 px-1.5 py-0.5 rounded border border-yellow-200 dark:border-yellow-800 font-medium">Editando</span>
+                )}
+             </div>
+             
+             <div className="flex items-center gap-2">
+               {!isEditing ? (
+                 <>
+                   <button
+                     onClick={startEditing}
+                     className="text-xs px-2.5 py-1.5 rounded-lg transition-all hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 font-medium flex items-center gap-1.5"
+                     title="Editar legenda"
+                   >
+                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                     </svg>
+                     <span>Editar</span>
+                   </button>
+                   <CopyButton
+                      text="Copiar Texto"
+                      contentToCopy={`${content.title}\n\n${content.caption}`}
+                      id="title_caption"
+                      variant="default"
+                    />
+                  </>
+               ) : (
+                 <>
+                   <button
+                     onClick={cancelEditing}
+                     className="text-xs px-2.5 py-1.5 rounded-lg transition-all bg-gray-100 hover:bg-gray-200 text-gray-600 border border-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300 dark:border-gray-600 font-medium flex items-center gap-1.5"
+                   >
+                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                     </svg>
+                     <span>Cancelar</span>
+                   </button>
+                   <button
+                     onClick={saveEditing}
+                     className="text-xs px-2.5 py-1.5 rounded-lg transition-all bg-green-600 hover:bg-green-700 text-white shadow-sm font-medium flex items-center gap-1.5"
+                   >
+                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                     </svg>
+                     <span>Salvar Alterações</span>
+                   </button>
+                 </>
+               )}
+             </div>
           </div>
           
           <div className="p-5">
-            {/* Título */}
+            {/* Título (sempre exibido) */}
             <h2 className="text-xl font-bold text-gray-900 dark:text-white leading-tight mb-4">{content.title}</h2>
             
             {/* Divisória decorativa */}
             <div className="w-12 h-1 bg-purple-500 rounded-full mb-4 opacity-50"></div>
 
-            {/* Legenda */}
-            <div className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-              {content.caption}
-            </div>
+            {/* Legenda (Modo Visualização ou Edição) */}
+            {isEditing ? (
+              <textarea
+                value={editedCaption}
+                onChange={(e) => setEditedCaption(e.target.value)}
+                className="w-full min-h-[200px] p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 text-sm leading-relaxed focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none resize-y transition-colors"
+                placeholder="Edite sua legenda aqui..."
+                autoFocus
+              />
+            ) : (
+              <div className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                {content.caption}
+              </div>
+            )}
           </div>
         </section>
 

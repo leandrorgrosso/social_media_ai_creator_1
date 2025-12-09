@@ -147,6 +147,14 @@ export function App() {
     }
   };
 
+  // Callback para atualizar o conteúdo quando editado no PostResult
+  const handleContentUpdate = (newContent: GeneratedPostContent) => {
+    setContent(newContent);
+    // Se estivermos editando um post já salvo, marcamos como "não salvo" visualmente 
+    // ou deixamos que o usuário clique em Salvar novamente para atualizar no banco.
+    // O comportamento atual do handleSavePost lida com UPDATE se currentPostId existir.
+  };
+
   const handleSavePost = async () => {
     if (!content) return;
     
@@ -366,6 +374,7 @@ export function App() {
                   <PostResult 
                     content={content} 
                     onSave={handleSavePost}
+                    onContentUpdate={handleContentUpdate}
                     isSaving={isSaving}
                     isSaved={!!currentPostId}
                   />
