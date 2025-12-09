@@ -41,14 +41,19 @@ const RESPONSE_SCHEMA: Schema = {
   required: ["title", "caption", "hashtags", "visual_prompt", "variations"],
 };
 
-// Inicializa o cliente com a chave da API injetada pelo Vite
+// Validação de segurança da chave
+if (!process.env.API_KEY) {
+  console.error("ERRO CRÍTICO: API_KEY não encontrada. Verifique suas variáveis de ambiente na Vercel.");
+}
+
+// Inicializa o cliente
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 /**
  * Função utilitária para tentar novamente em caso de erro 429 (Rate Limit)
- * Usa backoff exponencial (espera 2s, depois 4s, depois 8s...)
+ * Lê o tempo de espera da mensagem de erro se disponível.
  */
-async function withRetry<T>(operation: () => Promise<T>, retries = 3, delay = 2000): Promise<T> {
+async function withRetry<T>(operation: () => Promise<T>, retries = 3, defaultDelay = 2000): Promise<T> {
   try {
     return await operation();
   } catch (error: any) {
@@ -59,9 +64,23 @@ async function withRetry<T>(operation: () => Promise<T>, retries = 3, delay = 20
       (error.message && error.message.includes("RESOURCE_EXHAUSTED"));
 
     if (isRateLimit && retries > 0) {
-      console.warn(`Cota excedida (429). Tentando novamente em ${delay/1000}s... (${retries} tentativas restantes)`);
-      await new Promise((resolve) => setTimeout(resolve, delay));
-      return withRetry(operation, retries - 1, delay * 2);
+      let waitTime = defaultDelay;
+
+      // Tenta extrair o tempo exato sugerido pela API (ex: "Please retry in 18.63s")
+      // Procura por padrões como "retry in 18.6s" ou "retry after 18s"
+      const match = error.message?.match(/retry in (\d+(\.\d+)?)s/i);
+      if (match) {
+        // Se encontrou, usa o tempo da API + 1 segundo de segurança
+        waitTime = Math.ceil(parseFloat(match[1]) * 1000) + 1000;
+        console.warn(`⚠️ API pediu espera de ${match[1]}s. Aguardando ${waitTime/1000}s para tentar novamente...`);
+      } else {
+        console.warn(`⚠️ Cota excedida (429). Aguardando ${waitTime/1000}s... (${retries} tentativas restantes)`);
+      }
+      
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
+      
+      // Na próxima tentativa, se não houver instrução específica, duplicamos o delay padrão (backoff exponencial)
+      return withRetry(operation, retries - 1, defaultDelay * 2);
     }
     
     throw error;
@@ -141,15 +160,14 @@ export const generatePostImage = async (
     try {
       return await callImageModel(ai, model, prompt, config);
     } catch (error: any) {
-      console.warn(`Erro na tentativa inicial com modelo ${model}:`, error);
-
-      // Verificação específica para fallback de modelo PRO para FLASH
-      // Se for erro de permissão (403) OU Rate Limit (429) no modelo Pro, tentamos o Flash
-      const isPermissionError = error.message?.includes("403") || error.status === 403 || error.status === "PERMISSION_DENIED";
       
-      // Nota: Se for 429, o withRetry externo já pegaria, mas aqui dentro queremos tentar o modelo mais barato antes de desistir
-      if (isHighRes && (isPermissionError)) {
-        console.log("Tentando fallback para gemini-2.5-flash-image...");
+      // Verificação específica para fallback de modelo PRO para FLASH
+      const isPermissionError = error.message?.includes("403") || error.status === 403 || error.status === "PERMISSION_DENIED";
+      // Também fazemos fallback se for erro 429 no modelo Pro, pois o Flash pode ter cota diferente
+      const isRateLimitError = error.message?.includes("429") || error.status === 429;
+      
+      if (isHighRes && (isPermissionError || isRateLimitError)) {
+        console.log(`Tentando fallback para gemini-2.5-flash-image devido a erro (${error.status || 'desc'}) no modelo Pro...`);
         model = "gemini-2.5-flash-image";
         config = {
           imageConfig: {
@@ -161,17 +179,12 @@ export const generatePostImage = async (
           return await callImageModel(ai, model, prompt, config);
         } catch (fallbackError: any) {
           console.error("Erro no fallback:", fallbackError);
-          if (fallbackError.message) {
-            throw new Error(`Erro ao gerar imagem (Fallback): ${fallbackError.message}`);
-          }
-          throw fallbackError;
+          // Se o fallback falhar, lançamos o erro original para o withRetry tentar tudo de novo se necessário
+          throw error; 
         }
       }
 
-      if (error.message) {
-        throw new Error(error.message); // Propaga a mensagem original
-      }
       throw error;
     }
-  });
+  }, 3, 2000); // 3 tentativas, começando com 2s (mas será ajustado se a API pedir mais tempo)
 };

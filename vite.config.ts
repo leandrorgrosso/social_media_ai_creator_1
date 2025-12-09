@@ -4,14 +4,16 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   // Carrega variáveis de ambiente do diretório atual
-  // O terceiro parâmetro '' permite carregar todas as variáveis, não apenas as com prefixo VITE_
   const env = loadEnv(mode, process.cwd(), '');
+
+  // Tenta pegar a chave de API de múltiplas fontes possíveis para garantir que funcione
+  const apiKey = env.API_KEY || env.VITE_GEMINI_API_KEY || '';
 
   return {
     plugins: [react()],
     define: {
-      // Define process.env.API_KEY globalmente para ser usado no código cliente
-      'process.env.API_KEY': JSON.stringify(env.API_KEY)
+      // Define a variável globalmente
+      'process.env.API_KEY': JSON.stringify(apiKey)
     }
   }
 })
