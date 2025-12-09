@@ -5,6 +5,7 @@ import InputForm from './components/InputForm';
 import PostResult from './components/PostResult';
 import ImageGenerator from './components/ImageGenerator';
 import LoginScreen from './components/LoginScreen';
+import UpdatePasswordScreen from './components/UpdatePasswordScreen';
 import { SocialPostInput, GeneratedPostContent } from './types';
 import { generatePostContent } from './services/geminiService';
 
@@ -12,6 +13,7 @@ export function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [content, setContent] = useState<GeneratedPostContent | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,8 +27,12 @@ export function App() {
     // Ouvir mudanças de autenticação
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
+      
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsRecoveryMode(true);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -34,6 +40,12 @@ export function App() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    setIsRecoveryMode(false);
+  };
+
+  const handlePasswordUpdated = () => {
+    setIsRecoveryMode(false);
+    // O usuário já está logado após o update, então apenas removemos o modo de recuperação
   };
 
   const handleFormSubmit = async (inputData: SocialPostInput) => {
@@ -64,6 +76,11 @@ export function App() {
             <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
         </div>
     );
+  }
+
+  // Se estiver em modo de recuperação de senha, mostra a tela de atualização de senha
+  if (isRecoveryMode) {
+    return <UpdatePasswordScreen onPasswordUpdated={handlePasswordUpdated} />;
   }
 
   if (!session) {
