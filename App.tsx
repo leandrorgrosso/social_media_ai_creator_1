@@ -152,8 +152,16 @@ export function App() {
     setFormResetKey(prev => prev + 1);
     setIsHistoryOpen(false);
     
-    // Resetar configurações de imagem para o que está no localStorage (ou manter atual, conforme preferência)
-    // Opção: Manter o estado atual como "última usada"
+    // Restaurar preferências do usuário do localStorage
+    // Isso garante que se o usuário viu um post antigo com configurações diferentes, 
+    // o novo post voltará para a preferência padrão dele
+    if (typeof window !== 'undefined') {
+        const savedRatio = localStorage.getItem(IMG_STORAGE_KEYS.RATIO) as AspectRatio;
+        if (savedRatio) setImgAspectRatio(savedRatio);
+        
+        const savedSize = localStorage.getItem(IMG_STORAGE_KEYS.SIZE) as ImageSize;
+        if (savedSize) setImgSize(savedSize);
+    }
     
     // Scroll para o topo suavemente
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -196,7 +204,7 @@ export function App() {
     
     setIsSaving(true);
     try {
-      // Injeta as configurações de imagem atuais no objeto de conteúdo antes de salvar
+      // Injeta as configurações de imagem atuais no objeto de conteúdo antes de salvar no banco
       const contentToSave: GeneratedPostContent = {
         ...content,
         imageOptions: {

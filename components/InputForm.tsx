@@ -132,8 +132,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, savedPosts =
   const renderField = (
     field: keyof SocialPostInput, 
     label: string, 
-    placeholder: string, 
-    icon: string = "✨"
+    placeholder: string
   ) => {
     const isTopic = field === 'tema';
     const suggestionsData = getSuggestionsForField(field);
