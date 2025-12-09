@@ -41,39 +41,58 @@ const RESPONSE_SCHEMA: Schema = {
   required: ["title", "caption", "hashtags", "visual_prompt", "variations"],
 };
 
-// 🔑 pega do Vite (frontend)
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
+// Inicializa o cliente com a chave da API injetada pelo Vite
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-if (!GEMINI_API_KEY) {
-  throw new Error("VITE_GEMINI_API_KEY não está definida. Configure no .env e na Vercel.");
+/**
+ * Função utilitária para tentar novamente em caso de erro 429 (Rate Limit)
+ * Usa backoff exponencial (espera 2s, depois 4s, depois 8s...)
+ */
+async function withRetry<T>(operation: () => Promise<T>, retries = 3, delay = 2000): Promise<T> {
+  try {
+    return await operation();
+  } catch (error: any) {
+    const isRateLimit = 
+      error.status === 429 || 
+      error.code === 429 ||
+      (error.message && error.message.includes("429")) ||
+      (error.message && error.message.includes("RESOURCE_EXHAUSTED"));
+
+    if (isRateLimit && retries > 0) {
+      console.warn(`Cota excedida (429). Tentando novamente em ${delay/1000}s... (${retries} tentativas restantes)`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      return withRetry(operation, retries - 1, delay * 2);
+    }
+    
+    throw error;
+  }
 }
-
-// Reutiliza um único client
-const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 export const generatePostContent = async (
   input: SocialPostInput
 ): Promise<GeneratedPostContent> => {
   const userInputJSON = JSON.stringify(input);
 
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: userInputJSON,
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        responseMimeType: "application/json",
-        responseSchema: RESPONSE_SCHEMA,
-      },
-    });
+  return withRetry(async () => {
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: userInputJSON,
+        config: {
+          systemInstruction: SYSTEM_INSTRUCTION,
+          responseMimeType: "application/json",
+          responseSchema: RESPONSE_SCHEMA,
+        },
+      });
 
-    const text = response.text;
-    if (!text) throw new Error("Nenhum texto retornado pelo Gemini");
-    return JSON.parse(text) as GeneratedPostContent;
-  } catch (error) {
-    console.error("Erro ao gerar conteúdo do post:", error);
-    throw error;
-  }
+      const text = response.text;
+      if (!text) throw new Error("Nenhum texto retornado pelo Gemini");
+      return JSON.parse(text) as GeneratedPostContent;
+    } catch (error) {
+      console.error("Erro ao gerar conteúdo do post:", error);
+      throw error;
+    }
+  });
 };
 
 async function callImageModel(
@@ -117,39 +136,42 @@ export const generatePostImage = async (
     config.imageConfig.imageSize = size;
   }
 
-  try {
-    return await callImageModel(ai, model, prompt, config);
-  } catch (error: any) {
-    console.warn(`Erro na tentativa inicial com modelo ${model}:`, error);
+  // Envolvemos toda a lógica de chamada e fallback no withRetry
+  return withRetry(async () => {
+    try {
+      return await callImageModel(ai, model, prompt, config);
+    } catch (error: any) {
+      console.warn(`Erro na tentativa inicial com modelo ${model}:`, error);
 
-    if (
-      isHighRes &&
-      (error.message?.includes("403") ||
-        error.status === 403 ||
-        error.status === "PERMISSION_DENIED")
-    ) {
-      console.log("Tentando fallback para gemini-2.5-flash-image...");
-      model = "gemini-2.5-flash-image";
-      config = {
-        imageConfig: {
-          aspectRatio,
-        },
-      };
+      // Verificação específica para fallback de modelo PRO para FLASH
+      // Se for erro de permissão (403) OU Rate Limit (429) no modelo Pro, tentamos o Flash
+      const isPermissionError = error.message?.includes("403") || error.status === 403 || error.status === "PERMISSION_DENIED";
+      
+      // Nota: Se for 429, o withRetry externo já pegaria, mas aqui dentro queremos tentar o modelo mais barato antes de desistir
+      if (isHighRes && (isPermissionError)) {
+        console.log("Tentando fallback para gemini-2.5-flash-image...");
+        model = "gemini-2.5-flash-image";
+        config = {
+          imageConfig: {
+            aspectRatio,
+          },
+        };
 
-      try {
-        return await callImageModel(ai, model, prompt, config);
-      } catch (fallbackError: any) {
-        console.error("Erro no fallback:", fallbackError);
-        if (fallbackError.message) {
-          throw new Error(`Erro ao gerar imagem (Fallback): ${fallbackError.message}`);
+        try {
+          return await callImageModel(ai, model, prompt, config);
+        } catch (fallbackError: any) {
+          console.error("Erro no fallback:", fallbackError);
+          if (fallbackError.message) {
+            throw new Error(`Erro ao gerar imagem (Fallback): ${fallbackError.message}`);
+          }
+          throw fallbackError;
         }
-        throw fallbackError;
       }
-    }
 
-    if (error.message) {
-      throw new Error(`Erro da API: ${error.message}`);
+      if (error.message) {
+        throw new Error(error.message); // Propaga a mensagem original
+      }
+      throw error;
     }
-    throw error;
-  }
+  });
 };

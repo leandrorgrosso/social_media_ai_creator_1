@@ -26,10 +26,15 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ initialPrompt }) => {
       setImageUrl(url);
     } catch (err: any) {
       let msg = "Falha ao gerar imagem. Por favor, tente novamente.";
-      if (err.message && (err.message.includes("403") || err.message.includes("PERMISSION_DENIED"))) {
+      
+      const errorMessage = err.message || "";
+      
+      if (errorMessage.includes("403") || errorMessage.includes("PERMISSION_DENIED")) {
         msg = "Permissão negada (403). Sua chave de API pode não ter acesso à geração de imagens ou ao modelo selecionado.";
-      } else if (err.message) {
-        msg = err.message;
+      } else if (errorMessage.includes("429") || errorMessage.includes("RESOURCE_EXHAUSTED")) {
+        msg = "Muitos pedidos simultâneos (429). O sistema está aguardando liberação da API. Tente novamente em alguns segundos.";
+      } else if (errorMessage) {
+        msg = errorMessage;
       }
       setError(msg);
     } finally {

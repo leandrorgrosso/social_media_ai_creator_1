@@ -18,9 +18,15 @@ const App: React.FC = () => {
     try {
       const result = await generatePostContent(inputData);
       setContent(result);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError("Falha ao gerar conteúdo. Verifique se sua chave de API é válida e tente novamente.");
+      let errorMsg = "Falha ao gerar conteúdo. Verifique se sua chave de API é válida e tente novamente.";
+      
+      if (err.message && (err.message.includes('429') || err.message.includes('RESOURCE_EXHAUSTED'))) {
+         errorMsg = "O limite gratuito da API foi atingido temporariamente (Erro 429). Por favor, aguarde alguns segundos antes de tentar novamente.";
+      }
+
+      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -54,9 +60,9 @@ const App: React.FC = () => {
              </div>
             <InputForm onSubmit={handleFormSubmit} isLoading={isLoading} />
             {error && (
-                <div className="mt-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded-md">
-                    <p className="font-bold">Erro</p>
-                    <p>{error}</p>
+                <div className="mt-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded-md animate-in fade-in slide-in-from-top-2">
+                    <p className="font-bold text-sm uppercase mb-1">Atenção</p>
+                    <p className="text-sm">{error}</p>
                 </div>
             )}
           </div>
@@ -76,7 +82,10 @@ const App: React.FC = () => {
              {isLoading && (
                  <div className="flex flex-col items-center justify-center h-[500px] space-y-4">
                     <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
-                    <p className="text-purple-600 font-medium animate-pulse">Analisando tendências e criando o texto...</p>
+                    <p className="text-purple-600 font-medium animate-pulse">
+                      Analisando tendências e criando o texto...
+                      <span className="block text-xs text-gray-400 mt-2 font-normal">(Isso pode levar alguns segundos se a IA estiver ocupada)</span>
+                    </p>
                  </div>
              )}
 
