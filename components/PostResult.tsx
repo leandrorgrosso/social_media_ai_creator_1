@@ -17,7 +17,7 @@ const PostResult: React.FC<PostResultProps> = ({ content, onSave, onContentUpdat
   const [isEditing, setIsEditing] = useState(false);
   const [editedCaption, setEditedCaption] = useState(content.caption);
 
-  // Sincronizar estado de edição quando o conteúdo muda (ex: novo post gerado ou selecionado do histórico)
+  // Sincronizar estado de edição quando o conteúdo muda
   useEffect(() => {
     setEditedCaption(content.caption);
     setIsEditing(false);
@@ -26,11 +26,7 @@ const PostResult: React.FC<PostResultProps> = ({ content, onSave, onContentUpdat
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
-    
-    // Remove o feedback após 2 segundos
-    setTimeout(() => {
-      setCopiedId(null);
-    }, 2000);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   const startEditing = () => {
@@ -54,24 +50,10 @@ const PostResult: React.FC<PostResultProps> = ({ content, onSave, onContentUpdat
   };
 
   const getFullContentText = () => {
-    return `${content.title}
-
-${content.caption}
-
-Hashtags:
-${content.hashtags.join(' ')}
-
----
-Variações
-
-Versão Curta:
-${content.variations.short_version}
-
-Versão Engraçada:
-${content.variations.funny_version}`;
+    return `${content.title}\n\n${content.caption}\n\nHashtags:\n${content.hashtags.join(' ')}\n\n---\nOutras Opções:\n\nCurta: ${content.variations.short_version}\n\nEngraçada: ${content.variations.funny_version}`;
   };
 
-  // Componente de botão reutilizável com feedback visual
+  // Componente de botão reutilizável
   const CopyButton = ({ 
     text, 
     contentToCopy, 
@@ -82,7 +64,7 @@ ${content.variations.funny_version}`;
     text: string, 
     contentToCopy: string, 
     id: string, 
-    variant?: "default" | "ghost" | "blue" | "amber" | "purple" | "green",
+    variant?: "default" | "ghost" | "blue" | "amber" | "purple" | "green" | "gradient",
     className?: string
   }) => {
     const isCopied = copiedId === id;
@@ -99,22 +81,28 @@ ${content.variations.funny_version}`;
           colorClass = "bg-blue-50 hover:bg-blue-100 text-blue-600 border-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800";
           break;
         case "amber":
-          colorClass = "bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-200/50 dark:bg-amber-800/40 dark:hover:bg-amber-800/60 dark:text-amber-200 dark:border-amber-700";
+          colorClass = "bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:hover:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800";
           break;
         case "purple":
-          colorClass = "bg-purple-100 hover:bg-purple-200 text-purple-800 border-purple-200/50 dark:bg-purple-800/40 dark:hover:bg-purple-800/60 dark:text-purple-200 dark:border-purple-700";
+          colorClass = "bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-100 dark:bg-purple-900/20 dark:hover:bg-purple-900/40 dark:text-purple-300 dark:border-purple-800";
           break;
         case "green":
-          colorClass = "bg-green-50 hover:bg-green-100 text-green-700 border-green-200/50 dark:bg-green-900/20 dark:hover:bg-green-900/40 dark:text-green-300 dark:border-green-800";
+          colorClass = "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800";
           break;
+        case "gradient":
+           colorClass = "bg-white/80 hover:bg-white text-indigo-700 border-white/50 shadow-sm backdrop-blur-sm dark:bg-gray-800/80 dark:hover:bg-gray-800 dark:text-indigo-300 dark:border-gray-600";
+           break;
         default:
-          colorClass = "bg-gray-100 hover:bg-gray-200 text-gray-600 border-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300 dark:border-gray-600";
+          colorClass = "bg-gray-50 hover:bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-300 dark:border-gray-600";
       }
     }
 
     return (
       <button
-        onClick={() => handleCopy(contentToCopy, id)}
+        onClick={(e) => {
+          e.stopPropagation(); // Evita triggers indesejados se estiver dentro de um card clicável
+          handleCopy(contentToCopy, id);
+        }}
         disabled={isCopied}
         className={`text-xs px-2.5 py-1.5 rounded-lg transition-all transform active:scale-95 font-medium flex items-center gap-1.5 border ${colorClass} ${className}`}
         title="Copiar para área de transferência"
@@ -128,21 +116,40 @@ ${content.variations.funny_version}`;
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
           </svg>
         )}
-        <span>{isCopied ? "Copiado!" : text}</span>
+        <span className="hidden sm:inline">{isCopied ? "Copiado!" : text}</span>
+        <span className="sm:hidden">{isCopied ? "OK" : text}</span>
       </button>
     );
   };
 
   const isFullCopied = copiedId === 'full_content';
 
+  // Section Header Component
+  const SectionHeader = ({ icon, title, color = "gray", action }: { icon: string, title: string, color?: string, action?: React.ReactNode }) => (
+    <div className="flex justify-between items-center mb-3">
+      <div className="flex items-center gap-2">
+        <span className={`text-lg p-1.5 rounded-lg ${
+            color === 'purple' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300' :
+            color === 'blue' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300' :
+            color === 'green' ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-300' :
+            color === 'amber' ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-300' :
+            'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+          }`}>
+          {icon}
+        </span>
+        <h4 className="font-bold text-gray-800 dark:text-white text-sm uppercase tracking-wide">{title}</h4>
+      </div>
+      {action}
+    </div>
+  );
+
   return (
-    <div className="bg-white dark:bg-gray-800 shadow-lg rounded-2xl w-full border border-gray-100 dark:border-gray-700 h-full flex flex-col transition-colors overflow-hidden">
+    <div className="bg-white dark:bg-gray-800 shadow-xl rounded-2xl w-full border border-gray-100 dark:border-gray-700 h-full flex flex-col transition-colors overflow-hidden relative">
       
-      {/* Header Principal */}
-      <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 flex justify-between items-center z-10">
-        <h3 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
-          <span className="bg-purple-100 dark:bg-purple-900/50 p-1.5 rounded-lg text-lg">📝</span> 
-          Post Gerado
+      {/* --- Global Toolbar --- */}
+      <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md sticky top-0 z-20 flex justify-between items-center">
+        <h3 className="font-bold text-gray-800 dark:text-white flex items-center gap-2">
+          <span>📝</span> <span className="hidden sm:inline">Post Gerado</span>
         </h3>
         
         <div className="flex items-center gap-2">
@@ -152,8 +159,8 @@ ${content.variations.funny_version}`;
               disabled={isSaving}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center justify-center gap-1.5 border ${
                 isSaved
-                  ? "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800"
-                  : "bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 dark:border-gray-600"
+                  ? "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800 cursor-default"
+                  : "bg-gray-900 hover:bg-black text-white border-transparent dark:bg-purple-600 dark:hover:bg-purple-500"
               }`}
             >
               {isSaving ? (
@@ -166,7 +173,7 @@ ${content.variations.funny_version}`;
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                   </svg>
-                  <span>Salvo</span>
+                  <span>Salvo!</span>
                 </>
               ) : (
                 <>
@@ -185,16 +192,15 @@ ${content.variations.funny_version}`;
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center justify-center gap-1.5 border ${
               isFullCopied
                 ? "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800"
-                : "bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 dark:text-indigo-300 dark:border-indigo-800"
+                : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 dark:border-gray-600"
             }`}
-            title="Copiar Post Completo"
           >
             {isFullCopied ? (
               <>
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <span>Copiado!</span>
+                <span>Copiado</span>
               </>
             ) : (
                "Copiar Tudo"
@@ -203,15 +209,44 @@ ${content.variations.funny_version}`;
         </div>
       </div>
 
-      <div className="flex-grow overflow-y-auto p-6 space-y-6 custom-scrollbar bg-gray-50/50 dark:bg-gray-900/20">
+      {/* --- Scrollable Content Area --- */}
+      <div className="flex-grow overflow-y-auto p-4 sm:p-6 space-y-6 custom-scrollbar bg-gray-50/50 dark:bg-gray-900/30">
         
-        {/* SEÇÃO 1: CONTEÚDO PRINCIPAL (Card Unificado com Edição) */}
-        <section className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-          <div className="bg-gray-50 dark:bg-gray-700/30 px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+        {/* --- SECTION 1: TITLE (HEADLINE) --- */}
+        <section className="bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 border border-purple-100 dark:border-gray-700 rounded-xl p-5 shadow-sm relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-purple-200/20 rounded-bl-full pointer-events-none transition-transform group-hover:scale-110"></div>
+          
+          <SectionHeader 
+            icon="📢" 
+            title="Headline Principal" 
+            color="purple" 
+            action={
+              <CopyButton 
+                text="Copiar Título" 
+                contentToCopy={content.title}
+                id="main_title"
+                variant="gradient"
+              />
+            }
+          />
+          
+          <div className="relative z-10">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white leading-tight">
+              {content.title}
+            </h2>
+          </div>
+        </section>
+
+        {/* --- SECTION 2: CAPTION (EDITABLE) --- */}
+        <section className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+          <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-gray-700/20">
              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Conteúdo Principal</span>
+                <span className="text-lg">📄</span>
+                <h4 className="font-bold text-gray-700 dark:text-gray-200 text-sm uppercase">Legenda</h4>
                 {isEditing && (
-                  <span className="text-[10px] bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200 px-1.5 py-0.5 rounded border border-yellow-200 dark:border-yellow-800 font-medium">Editando</span>
+                  <span className="text-[10px] bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200 px-2 py-0.5 rounded-full font-medium animate-pulse">
+                    Editando...
+                  </span>
                 )}
              </div>
              
@@ -221,7 +256,6 @@ ${content.variations.funny_version}`;
                    <button
                      onClick={startEditing}
                      className="text-xs px-2.5 py-1.5 rounded-lg transition-all hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 font-medium flex items-center gap-1.5"
-                     title="Editar legenda"
                    >
                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -230,36 +264,23 @@ ${content.variations.funny_version}`;
                    </button>
                    <CopyButton
                       text="Copiar Texto"
-                      contentToCopy={`${content.title}\n\n${content.caption}`}
-                      id="title_caption"
+                      contentToCopy={content.caption}
+                      id="caption_only"
                       variant="default"
                     />
                   </>
                ) : (
                  <>
-                   {/* Contador de Caracteres */}
-                   <span className={`text-[10px] sm:text-xs font-mono font-medium mr-2 hidden sm:inline-block ${
-                      editedCaption.length > 2200 ? 'text-red-500 font-bold' : 'text-gray-400 dark:text-gray-500'
-                   }`}>
-                      {editedCaption.length}/2200
-                   </span>
-
                    <button
                      onClick={cancelEditing}
-                     className="text-xs px-2.5 py-1.5 rounded-lg transition-all bg-gray-100 hover:bg-gray-200 text-gray-600 border border-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300 dark:border-gray-600 font-medium flex items-center gap-1.5"
+                     className="text-xs px-3 py-1.5 rounded-lg font-medium text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
                    >
-                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                     </svg>
-                     <span>Cancelar</span>
+                     Cancelar
                    </button>
                    <button
                      onClick={saveEditing}
-                     className="text-xs px-2.5 py-1.5 rounded-lg transition-all bg-green-600 hover:bg-green-700 text-white shadow-sm font-medium flex items-center gap-1.5"
+                     className="text-xs px-3 py-1.5 rounded-lg bg-black text-white dark:bg-white dark:text-black font-bold shadow-md hover:opacity-90 transition-opacity flex items-center gap-1"
                    >
-                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                     </svg>
                      <span>Salvar</span>
                    </button>
                  </>
@@ -267,140 +288,130 @@ ${content.variations.funny_version}`;
              </div>
           </div>
           
-          <div className="p-5">
-            {/* Título (sempre exibido) */}
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white leading-tight mb-4">{content.title}</h2>
-            
-            {/* Divisória decorativa */}
-            <div className="w-12 h-1 bg-purple-500 rounded-full mb-4 opacity-50"></div>
-
-            {/* Legenda (Modo Visualização ou Edição) */}
+          <div className="p-0">
             {isEditing ? (
-              <div className="relative">
+              <div className="relative group">
                 <textarea
                   value={editedCaption}
                   onChange={(e) => setEditedCaption(e.target.value)}
-                  className={`w-full min-h-[200px] p-3 rounded-lg border bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 text-sm leading-relaxed focus:ring-2 focus:ring-purple-500 outline-none resize-y transition-colors ${
-                    editedCaption.length > 2200 
-                      ? 'border-red-300 dark:border-red-800 focus:border-red-500' 
-                      : 'border-gray-300 dark:border-gray-600 focus:border-transparent'
+                  className={`w-full min-h-[300px] p-5 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 text-sm leading-relaxed outline-none resize-y transition-colors ${
+                    editedCaption.length > 2200 ? 'text-red-600 dark:text-red-400' : ''
                   }`}
-                  placeholder="Edite sua legenda aqui..."
+                  placeholder="Escreva sua legenda aqui..."
                   autoFocus
                 />
-                {/* Contador visível no mobile abaixo do textarea */}
-                <div className="text-right mt-1 sm:hidden">
-                  <span className={`text-[10px] font-mono font-medium ${
-                      editedCaption.length > 2200 ? 'text-red-500 font-bold' : 'text-gray-400 dark:text-gray-500'
-                   }`}>
-                      {editedCaption.length}/2200
-                   </span>
-                </div>
+                 <div className="absolute bottom-2 right-2 text-[10px] font-mono bg-white/80 dark:bg-gray-800/80 backdrop-blur px-2 py-1 rounded text-gray-400 border border-gray-100 dark:border-gray-700">
+                    {editedCaption.length}/2200 chars
+                 </div>
               </div>
             ) : (
-              <div className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+              <div className="p-5 text-sm leading-relaxed text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-sans">
                 {content.caption}
               </div>
             )}
           </div>
         </section>
 
-        {/* SEÇÃO 2: HASHTAGS */}
-        <section className="bg-white dark:bg-gray-800 rounded-xl border border-blue-100 dark:border-blue-900/30 shadow-sm overflow-hidden">
-           <div className="bg-blue-50/30 dark:bg-blue-900/10 px-4 py-3 border-b border-blue-50 dark:border-blue-900/20 flex justify-between items-center">
-             <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1">
-               <span className="text-lg">#</span> Hashtags
-             </span>
-             <CopyButton 
+        {/* --- SECTION 3: HASHTAGS --- */}
+        <section className="bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-xl p-5 shadow-sm">
+           <SectionHeader 
+            icon="#" 
+            title="Hashtags Otimizadas" 
+            color="blue"
+            action={
+              <CopyButton 
                 text="Copiar Tags" 
                 contentToCopy={content.hashtags.join(' ')}
                 id="hashtags"
                 variant="blue"
               />
-          </div>
-          <div className="p-4 bg-white dark:bg-gray-800">
-            <div className="flex flex-wrap gap-2">
-              {content.hashtags.map((tag, idx) => (
-                <span key={idx} className="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300 border border-blue-100 dark:border-blue-800 px-2.5 py-1 rounded-md text-xs font-medium transition-colors hover:bg-blue-100 dark:hover:bg-blue-900/40 cursor-default">
-                  {tag}
-                </span>
-              ))}
-            </div>
+            } 
+          />
+          <div className="flex flex-wrap gap-2">
+            {content.hashtags.map((tag, idx) => (
+              <span key={idx} className="bg-white dark:bg-blue-900/20 text-blue-600 dark:text-blue-300 border border-blue-100 dark:border-blue-800 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:shadow-sm cursor-default select-all">
+                {tag}
+              </span>
+            ))}
           </div>
         </section>
 
-        {/* SEÇÃO 3: VARIAÇÕES */}
-        <section>
-          <div className="flex items-center gap-3 mb-3 pl-1">
-            <span className="h-px bg-gray-200 dark:bg-gray-700 flex-grow"></span>
-            <span className="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Outras Opções</span>
-            <span className="h-px bg-gray-200 dark:bg-gray-700 flex-grow"></span>
-          </div>
-          
-          <div className="grid gap-4">
-            
-            {/* NOVAS VARIAÇÕES DE TÍTULO */}
-            {content.title_variations && content.title_variations.length > 0 && (
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-green-100 dark:border-green-900/30 shadow-sm transition-all hover:border-green-200 dark:hover:border-green-800">
-                <div className="flex justify-between items-center mb-3">
-                  <span className="flex items-center gap-2 text-xs font-bold text-green-700 dark:text-green-400 uppercase tracking-wide">
-                     <span className="w-2 h-2 rounded-full bg-green-400"></span> Ideias de Títulos
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  {content.title_variations.map((title, idx) => (
-                    <div key={idx} className="flex justify-between items-center group/item p-2 hover:bg-green-50 dark:hover:bg-green-900/10 rounded-lg transition-colors border border-transparent hover:border-green-100 dark:hover:border-green-800/30">
-                      <span className="text-sm text-gray-700 dark:text-gray-300 leading-tight">{title}</span>
-                      <CopyButton 
-                        text="Copiar" 
-                        contentToCopy={title}
-                        id={`title_var_${idx}`}
-                        variant="green"
-                        className="opacity-0 group-hover/item:opacity-100 transition-opacity"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+        <div className="h-px bg-gray-200 dark:bg-gray-700 my-2"></div>
 
-            {/* Versão Curta */}
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-amber-100 dark:border-amber-900/30 shadow-sm transition-all hover:border-amber-200 dark:hover:border-amber-800 relative group">
-              <div className="flex justify-between items-center mb-3">
-                <span className="flex items-center gap-2 text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wide">
-                  <span className="w-2 h-2 rounded-full bg-amber-400"></span> Versão Curta
-                </span>
-                <CopyButton 
+        {/* --- SECTION 4: VARIATIONS HEADER --- */}
+        <div className="flex items-center gap-2 mb-2">
+           <span className="text-gray-400 dark:text-gray-500 text-xs font-bold uppercase tracking-widest">Opções Alternativas</span>
+           <span className="h-px bg-gray-200 dark:bg-gray-700 flex-grow"></span>
+        </div>
+
+        {/* --- SECTION 5: HOOKS (TITLE VARIATIONS) --- */}
+        {content.title_variations && content.title_variations.length > 0 && (
+          <section className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm">
+             <SectionHeader icon="🪝" title="Hooks (Ganchos)" color="green" />
+             <div className="grid gap-2">
+                {content.title_variations.map((title, idx) => (
+                  <div key={idx} className="group flex justify-between items-center p-3 rounded-lg bg-gray-50 dark:bg-gray-700/30 border border-transparent hover:border-green-200 dark:hover:border-green-800 transition-all">
+                    <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">{title}</span>
+                    <CopyButton 
+                      text="Copiar" 
+                      contentToCopy={title}
+                      id={`title_var_${idx}`}
+                      variant="ghost"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    />
+                  </div>
+                ))}
+             </div>
+          </section>
+        )}
+
+        {/* --- SECTION 6: GRID VARIATIONS (SHORT & FUNNY) --- */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          
+          {/* Versão Curta */}
+          <section className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm flex flex-col">
+            <SectionHeader 
+              icon="⚡" 
+              title="Versão Curta" 
+              color="amber"
+              action={
+                 <CopyButton 
                   text="Copiar" 
                   contentToCopy={content.variations.short_version}
                   id="short_version"
                   variant="amber"
                 />
-              </div>
-              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed border-l-2 border-amber-100 dark:border-amber-800/50 pl-3">
-                {content.variations.short_version}
+              }
+            />
+            <div className="flex-grow bg-amber-50/50 dark:bg-amber-900/10 rounded-lg p-4 border border-amber-100/50 dark:border-amber-900/20">
+              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed italic">
+                "{content.variations.short_version}"
               </p>
             </div>
+          </section>
 
-            {/* Versão Engraçada */}
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-purple-100 dark:border-purple-900/30 shadow-sm transition-all hover:border-purple-200 dark:hover:border-purple-800 relative group">
-              <div className="flex justify-between items-center mb-3">
-                <span className="flex items-center gap-2 text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wide">
-                   <span className="w-2 h-2 rounded-full bg-purple-400"></span> Versão Engraçada
-                </span>
+          {/* Versão Engraçada */}
+          <section className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm flex flex-col">
+            <SectionHeader 
+              icon="🤪" 
+              title="Versão Divertida" 
+              color="purple"
+              action={
                  <CopyButton 
                   text="Copiar" 
                   contentToCopy={content.variations.funny_version}
                   id="funny_version"
                   variant="purple"
                 />
-              </div>
-              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed border-l-2 border-purple-100 dark:border-purple-800/50 pl-3">
-                {content.variations.funny_version}
+              }
+            />
+             <div className="flex-grow bg-purple-50/50 dark:bg-purple-900/10 rounded-lg p-4 border border-purple-100/50 dark:border-purple-900/20">
+              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed italic">
+                "{content.variations.funny_version}"
               </p>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
 
       </div>
     </div>
