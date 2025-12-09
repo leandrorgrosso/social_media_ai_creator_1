@@ -28,23 +28,24 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
   // Constantes de estilo para padronização rigorosa
   // py-3.5 garante uma altura de toque confortável em mobile e alinhamento perfeito
   const labelClasses = "block text-sm font-semibold text-gray-700 mb-2 ml-1 tracking-wide";
-  const inputBaseClasses = "w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 transition-all duration-200 outline-none appearance-none";
+  // Adicionado 'text-base' para garantir 16px e evitar zoom automático no iOS em inputs
+  const inputBaseClasses = "w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-base text-gray-900 placeholder-gray-400 transition-all duration-200 outline-none appearance-none";
   const inputStateClasses = "focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 hover:border-purple-300";
   const inputClasses = `${inputBaseClasses} ${inputStateClasses}`;
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white shadow-xl shadow-purple-900/5 rounded-2xl p-6 md:p-8 w-full max-w-2xl mx-auto border border-white/50 relative overflow-hidden flex flex-col h-full">
+    <form onSubmit={handleSubmit} className="bg-white shadow-xl shadow-purple-900/5 rounded-2xl p-5 sm:p-6 md:p-8 w-full max-w-2xl mx-auto border border-white/50 relative overflow-hidden flex flex-col h-full">
       {/* Decorative gradient overlay */}
       <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500"></div>
 
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
-          <span className="text-3xl bg-purple-100 p-2.5 rounded-xl shadow-sm">✨</span> 
+      <div className="mb-6 md:mb-8">
+        <h2 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-3">
+          <span className="text-2xl md:text-3xl bg-purple-100 p-2.5 rounded-xl shadow-sm">✨</span> 
           <span>Crie Conteúdo Mágico</span>
         </h2>
       </div>
       
-      <div className="space-y-6 md:space-y-8 flex-grow">
+      <div className="space-y-5 md:space-y-8 flex-grow">
         {/* Full width row */}
         <div className="group">
           <label className={labelClasses}>Tema / Tópico</label>
@@ -60,7 +61,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
         </div>
 
         {/* Two columns row - Responsive Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8">
           <div className="group">
             <label className={labelClasses}>Nicho</label>
             <input
@@ -88,7 +89,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
         </div>
 
         {/* Two columns row - Responsive Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8">
            <div className="group relative">
             <label className={labelClasses}>Objetivo</label>
             <div className="relative">
@@ -140,7 +141,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
         </div>
       </div>
 
-      <div className="mt-8 pt-6 border-t border-gray-100">
+      <div className="mt-6 md:mt-8 pt-6 border-t border-gray-100">
         <button
           type="submit"
           disabled={isLoading}
