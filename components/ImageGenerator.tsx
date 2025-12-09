@@ -54,16 +54,16 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ initialPrompt }) => {
   };
 
   return (
-    <div className="bg-white shadow-lg rounded-2xl p-6 md:p-8 w-full border border-gray-100 h-full flex flex-col">
-      <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+    <div className="bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6 md:p-8 w-full border border-gray-100 dark:border-gray-700 h-full flex flex-col transition-colors">
+      <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
         <span>🎨</span> Estúdio de IA
       </h3>
 
       <div className="space-y-4 flex-grow">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Prompt Visual</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Prompt Visual</label>
           <textarea
-            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 outline-none text-sm resize-none h-24"
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 outline-none text-sm resize-none h-24 placeholder-gray-400 dark:placeholder-gray-500 transition-colors"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Descreva a imagem..."
@@ -72,9 +72,9 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ initialPrompt }) => {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Proporção</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Proporção</label>
             <select
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 outline-none bg-white text-sm"
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-purple-500 outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm transition-colors"
               value={aspectRatio}
               onChange={(e) => setAspectRatio(e.target.value as AspectRatio)}
             >
@@ -86,9 +86,9 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ initialPrompt }) => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Resolução</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Resolução</label>
             <select
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 outline-none bg-white text-sm"
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-purple-500 outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm transition-colors"
               value={size}
               onChange={(e) => setSize(e.target.value as ImageSize)}
             >
@@ -96,12 +96,12 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ initialPrompt }) => {
               <option value={ImageSize.SIZE_2K}>2K (Pro - Alta Res)</option>
               <option value={ImageSize.SIZE_4K}>4K (Pro - Ultra HD)</option>
             </select>
-            <p className="text-[10px] text-gray-500 mt-1">2K e 4K podem exigir chaves de API pagas.</p>
+            <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1">2K e 4K podem exigir chaves de API pagas.</p>
           </div>
         </div>
 
         {error && (
-          <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm border border-red-100">
+          <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 rounded-lg text-sm border border-red-100 dark:border-red-800">
             {error}
           </div>
         )}
@@ -110,16 +110,16 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ initialPrompt }) => {
           onClick={handleGenerate}
           disabled={loading}
           className={`w-full py-2.5 px-4 rounded-lg font-medium text-white transition-all ${
-            loading ? 'bg-gray-400' : 'bg-gray-800 hover:bg-black'
+            loading ? 'bg-gray-400 dark:bg-gray-600' : 'bg-gray-800 hover:bg-black dark:bg-purple-600 dark:hover:bg-purple-700'
           }`}
         >
           {loading ? 'Renderizando...' : 'Gerar Visual'}
         </button>
 
         {imageUrl && (
-          <div className="mt-6 border-t pt-4 animate-in fade-in duration-500">
-             <div className="relative group rounded-xl overflow-hidden shadow-md border border-gray-200">
-                <img src={imageUrl} alt="Generated" className="w-full h-auto object-contain bg-gray-50 max-h-[400px]" />
+          <div className="mt-6 border-t border-gray-100 dark:border-gray-700 pt-4 animate-in fade-in duration-500">
+             <div className="relative group rounded-xl overflow-hidden shadow-md border border-gray-200 dark:border-gray-600">
+                <img src={imageUrl} alt="Generated" className="w-full h-auto object-contain bg-gray-50 dark:bg-gray-900 max-h-[400px]" />
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <button 
                         onClick={downloadImage}

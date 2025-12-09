@@ -97,34 +97,34 @@ const LoginScreen: React.FC<LoginScreenProps> = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f3f4f6] relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-[#f3f4f6] dark:bg-gray-900 relative overflow-hidden transition-colors duration-300">
       {/* Background Decorativo */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-        <div className="absolute top-[-10%] right-[-5%] w-96 h-96 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-        <div className="absolute bottom-[-10%] left-[-5%] w-96 h-96 bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-[-10%] right-[-5%] w-96 h-96 bg-purple-300 dark:bg-purple-900 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob transition-colors"></div>
+        <div className="absolute bottom-[-10%] left-[-5%] w-96 h-96 bg-indigo-300 dark:bg-indigo-900 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000 transition-colors"></div>
       </div>
 
-      <div className="bg-white p-8 md:p-10 rounded-3xl shadow-2xl w-full max-w-md relative z-10 border border-white/50">
+      <div className="bg-white dark:bg-gray-800 p-8 md:p-10 rounded-3xl shadow-2xl w-full max-w-md relative z-10 border border-white/50 dark:border-gray-700 transition-colors">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4 shadow-lg shadow-purple-500/30">
             AI
           </div>
-          <h2 className="text-3xl font-bold text-gray-800">
+          <h2 className="text-3xl font-bold text-gray-800 dark:text-white transition-colors">
             {getTitle()}
           </h2>
-          <p className="text-gray-500 mt-2">
+          <p className="text-gray-500 dark:text-gray-400 mt-2 transition-colors">
             {getSubtitle()}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1">Email</label>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 ml-1 transition-colors">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 outline-none transition-all"
+              className="w-full px-4 py-3.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-gray-600 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 outline-none transition-all placeholder-gray-400 dark:placeholder-gray-500"
               placeholder="seu@email.com"
               required
             />
@@ -134,7 +134,7 @@ const LoginScreen: React.FC<LoginScreenProps> = () => {
           {!isResetPassword && (
             <div>
               <div className="flex justify-between items-center mb-2 ml-1">
-                <label className="block text-sm font-semibold text-gray-700">Senha</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 transition-colors">Senha</label>
                 {!isSignUp && (
                   <button
                     type="button"
@@ -143,7 +143,7 @@ const LoginScreen: React.FC<LoginScreenProps> = () => {
                       setError('');
                       setMessage('');
                     }}
-                    className="text-xs font-semibold text-purple-600 hover:text-purple-700"
+                    className="text-xs font-semibold text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 transition-colors"
                   >
                     Esqueceu a senha?
                   </button>
@@ -153,7 +153,7 @@ const LoginScreen: React.FC<LoginScreenProps> = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 outline-none transition-all"
+                className="w-full px-4 py-3.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-gray-600 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 outline-none transition-all placeholder-gray-400 dark:placeholder-gray-500"
                 placeholder="••••••••"
                 required
                 minLength={6}
@@ -162,13 +162,13 @@ const LoginScreen: React.FC<LoginScreenProps> = () => {
           )}
 
           {error && (
-            <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg text-center font-medium border border-red-100 animate-pulse">
+            <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 text-sm rounded-lg text-center font-medium border border-red-100 dark:border-red-800 animate-pulse transition-colors">
               {error}
             </div>
           )}
 
           {message && (
-            <div className="p-3 bg-green-50 text-green-600 text-sm rounded-lg text-center font-medium border border-green-100">
+            <div className="p-3 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-300 text-sm rounded-lg text-center font-medium border border-green-100 dark:border-green-800 transition-colors">
               {message}
             </div>
           )}
@@ -178,7 +178,7 @@ const LoginScreen: React.FC<LoginScreenProps> = () => {
             disabled={isLoading}
             className={`w-full py-4 rounded-xl text-white font-bold text-lg shadow-lg transition-all duration-300 transform active:scale-[0.98] ${
               isLoading 
-                ? 'bg-gray-400 cursor-not-allowed' 
+                ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed' 
                 : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-purple-500/25 hover:shadow-purple-500/40'
             }`}
           >
@@ -196,7 +196,7 @@ const LoginScreen: React.FC<LoginScreenProps> = () => {
           </button>
         </form>
         
-        <p className="mt-8 text-center text-sm text-gray-500">
+        <p className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400 transition-colors">
           {isResetPassword ? (
             <button 
               type="button"
@@ -205,7 +205,7 @@ const LoginScreen: React.FC<LoginScreenProps> = () => {
                 setError('');
                 setMessage('');
               }}
-              className="text-gray-600 font-bold hover:text-gray-800 flex items-center justify-center gap-2 mx-auto focus:outline-none"
+              className="text-gray-600 dark:text-gray-400 font-bold hover:text-gray-800 dark:hover:text-gray-200 flex items-center justify-center gap-2 mx-auto focus:outline-none transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
               Voltar para Login
@@ -220,7 +220,7 @@ const LoginScreen: React.FC<LoginScreenProps> = () => {
                   setError('');
                   setMessage('');
                 }}
-                className="text-purple-600 font-bold hover:underline focus:outline-none"
+                className="text-purple-600 dark:text-purple-400 font-bold hover:underline focus:outline-none transition-colors"
               >
                 {isSignUp ? 'Fazer Login' : 'Criar conta'}
               </button>

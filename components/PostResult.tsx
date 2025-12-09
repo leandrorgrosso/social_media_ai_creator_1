@@ -42,7 +42,7 @@ ${content.variations.funny_version}`;
     text, 
     contentToCopy, 
     id, 
-    colorClass = "bg-gray-100 hover:bg-gray-200 text-gray-600 border-gray-200" 
+    colorClass = "bg-gray-100 hover:bg-gray-200 text-gray-600 border-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300 dark:border-gray-600" 
   }: { 
     text: string, 
     contentToCopy: string, 
@@ -57,7 +57,7 @@ ${content.variations.funny_version}`;
         disabled={isCopied}
         className={`text-xs px-3 py-1.5 rounded-lg transition-all transform active:scale-95 font-medium flex items-center gap-1 border ${
           isCopied 
-            ? "bg-green-100 text-green-700 border-green-200 cursor-default scale-100" 
+            ? "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800 cursor-default scale-100" 
             : colorClass
         }`}
         title="Copiar para área de transferência"
@@ -79,9 +79,9 @@ ${content.variations.funny_version}`;
   const isFullCopied = copiedId === 'full_content';
 
   return (
-    <div className="bg-white shadow-lg rounded-2xl p-6 md:p-8 w-full border border-gray-100 h-full flex flex-col">
-      <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
-        <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+    <div className="bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6 md:p-8 w-full border border-gray-100 dark:border-gray-700 h-full flex flex-col transition-colors">
+      <div className="flex justify-between items-center mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
+        <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
           <span>📝</span> Post Gerado
         </h3>
         
@@ -90,8 +90,8 @@ ${content.variations.funny_version}`;
           disabled={isFullCopied}
           className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center justify-center gap-2 border ${
             isFullCopied
-              ? "bg-green-100 text-green-700 border-green-200"
-              : "bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-100"
+              ? "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800"
+              : "bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 dark:text-indigo-300 dark:border-indigo-800"
           }`}
           title="Copiar Post Completo (Título, Legenda, Tags e Variações)"
         >
@@ -112,20 +112,20 @@ ${content.variations.funny_version}`;
         {/* Título */}
         <div>
           <div className="flex justify-between items-end mb-1">
-            <label className="text-xs uppercase tracking-wider text-gray-400 font-bold">Título</label>
+            <label className="text-xs uppercase tracking-wider text-gray-400 dark:text-gray-500 font-bold">Título</label>
             <CopyButton
               text="Copiar Título+Legenda"
               contentToCopy={`${content.title}\n\n${content.caption}`}
               id="title_caption"
             />
           </div>
-          <p className="text-lg font-bold text-gray-900 leading-tight">{content.title}</p>
+          <p className="text-lg font-bold text-gray-900 dark:text-white leading-tight">{content.title}</p>
         </div>
 
         {/* Legenda */}
         <div>
-          <label className="text-xs uppercase tracking-wider text-gray-400 font-bold mb-1 block">Legenda</label>
-          <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 whitespace-pre-wrap text-gray-700 text-sm leading-relaxed">
+          <label className="text-xs uppercase tracking-wider text-gray-400 dark:text-gray-500 font-bold mb-1 block">Legenda</label>
+          <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl border border-gray-100 dark:border-gray-600 whitespace-pre-wrap text-gray-700 dark:text-gray-300 text-sm leading-relaxed transition-colors">
             {content.caption}
           </div>
         </div>
@@ -133,17 +133,17 @@ ${content.variations.funny_version}`;
         {/* Hashtags */}
         <div>
           <div className="flex justify-between items-end mb-2">
-            <label className="text-xs uppercase tracking-wider text-gray-400 font-bold">Hashtags</label>
+            <label className="text-xs uppercase tracking-wider text-gray-400 dark:text-gray-500 font-bold">Hashtags</label>
             <CopyButton 
               text="Copiar Tags" 
               contentToCopy={content.hashtags.join(' ')}
               id="hashtags"
-              colorClass="bg-blue-50 hover:bg-blue-100 text-blue-600 border-blue-100"
+              colorClass="bg-blue-50 hover:bg-blue-100 text-blue-600 border-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800"
             />
           </div>
           <div className="flex flex-wrap gap-2">
             {content.hashtags.map((tag, idx) => (
-              <span key={idx} className="bg-blue-50/50 text-blue-600 border border-blue-100 px-2 py-1 rounded-md text-xs font-medium">
+              <span key={idx} className="bg-blue-50/50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300 border border-blue-100 dark:border-blue-800 px-2 py-1 rounded-md text-xs font-medium">
                 {tag}
               </span>
             ))}
@@ -151,35 +151,35 @@ ${content.variations.funny_version}`;
         </div>
 
         {/* Variações */}
-        <div className="border-t border-gray-100 pt-6">
-          <label className="text-xs uppercase tracking-wider text-gray-400 font-bold mb-3 block">Variações</label>
+        <div className="border-t border-gray-100 dark:border-gray-700 pt-6">
+          <label className="text-xs uppercase tracking-wider text-gray-400 dark:text-gray-500 font-bold mb-3 block">Variações</label>
           <div className="grid gap-4">
             {/* Versão Curta */}
-            <div className="bg-amber-50 p-4 rounded-xl border border-amber-100 transition-colors hover:border-amber-200">
+            <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-xl border border-amber-100 dark:border-amber-800/50 transition-colors hover:border-amber-200 dark:hover:border-amber-700">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-xs font-bold text-amber-700 uppercase tracking-wide">Versão Curta</span>
+                <span className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wide">Versão Curta</span>
                 <CopyButton 
                   text="Copiar" 
                   contentToCopy={content.variations.short_version}
                   id="short_version"
-                  colorClass="bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-200/50"
+                  colorClass="bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-200/50 dark:bg-amber-800/40 dark:hover:bg-amber-800/60 dark:text-amber-200 dark:border-amber-700"
                 />
               </div>
-              <p className="text-sm text-gray-800 leading-relaxed">{content.variations.short_version}</p>
+              <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed">{content.variations.short_version}</p>
             </div>
 
             {/* Versão Engraçada */}
-            <div className="bg-purple-50 p-4 rounded-xl border border-purple-100 transition-colors hover:border-purple-200">
+            <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-xl border border-purple-100 dark:border-purple-800/50 transition-colors hover:border-purple-200 dark:hover:border-purple-700">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-xs font-bold text-purple-700 uppercase tracking-wide">Versão Engraçada</span>
+                <span className="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wide">Versão Engraçada</span>
                  <CopyButton 
                   text="Copiar" 
                   contentToCopy={content.variations.funny_version}
                   id="funny_version"
-                  colorClass="bg-purple-100 hover:bg-purple-200 text-purple-800 border-purple-200/50"
+                  colorClass="bg-purple-100 hover:bg-purple-200 text-purple-800 border-purple-200/50 dark:bg-purple-800/40 dark:hover:bg-purple-800/60 dark:text-purple-200 dark:border-purple-700"
                 />
               </div>
-              <p className="text-sm text-gray-800 leading-relaxed">{content.variations.funny_version}</p>
+              <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed">{content.variations.funny_version}</p>
             </div>
           </div>
         </div>
