@@ -27,6 +27,9 @@ export function App() {
   const [isSaving, setIsSaving] = useState(false);
   const [lastInputData, setLastInputData] = useState<SocialPostInput | null>(null);
   
+  // Estado para forçar o reset do formulário
+  const [formResetKey, setFormResetKey] = useState(0);
+  
   // Estado do Tema (Dark Mode)
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     if (typeof window !== 'undefined') {
@@ -105,6 +108,19 @@ export function App() {
   const handlePasswordUpdated = () => {
     setIsRecoveryMode(false);
     // O usuário já está logado após o update, então apenas removemos o modo de recuperação
+  };
+
+  const handleNewPost = () => {
+    setContent(null);
+    setCurrentPostId(null);
+    setError(null);
+    setLastInputData(null);
+    // Incrementa a chave para forçar a remontagem do componente InputForm, limpando os campos
+    setFormResetKey(prev => prev + 1);
+    setIsHistoryOpen(false);
+    
+    // Scroll para o topo suavemente
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleFormSubmit = async (inputData: SocialPostInput) => {
@@ -224,11 +240,24 @@ export function App() {
             <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold shadow-md">
               AI
             </div>
-            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300">
+            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 hidden sm:block">
               Criador de Posts
             </h1>
           </div>
-          <div className="flex items-center gap-4">
+          
+          <div className="flex items-center gap-3">
+              {/* Botão Novo Post */}
+              <button
+                onClick={handleNewPost}
+                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-bold transition-all shadow-md shadow-purple-500/20 active:scale-95"
+                title="Criar novo post limpo"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                </svg>
+                <span className="hidden sm:inline">Novo Post</span>
+              </button>
+
               <button
                 onClick={() => setIsHistoryOpen(!isHistoryOpen)}
                 className={`hidden lg:flex items-center gap-2 text-sm font-medium transition-colors ${isHistoryOpen ? 'text-purple-600 dark:text-purple-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`}
@@ -241,8 +270,6 @@ export function App() {
 
               <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 hidden lg:block"></div>
 
-              <span className="text-xs text-gray-400 hidden sm:inline-block dark:text-gray-500">{session.user.email}</span>
-              
               {/* Theme Toggle Button */}
               <button
                 onClick={toggleTheme}
@@ -250,12 +277,10 @@ export function App() {
                 title={theme === 'light' ? "Mudar para Modo Escuro" : "Mudar para Modo Claro"}
               >
                 {theme === 'light' ? (
-                  // Moon Icon
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                   </svg>
                 ) : (
-                  // Sun Icon
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
@@ -266,9 +291,13 @@ export function App() {
 
               <button 
                 onClick={handleLogout}
-                className="text-sm text-gray-500 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 font-medium transition-colors"
+                className="p-2 lg:p-0 lg:text-sm text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 font-medium transition-colors"
+                title="Sair"
               >
-                Sair
+                <span className="hidden lg:inline">Sair</span>
+                <svg className="w-5 h-5 lg:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
               </button>
           </div>
         </div>
@@ -296,6 +325,7 @@ export function App() {
                 <p className="text-gray-500 dark:text-gray-400 text-sm transition-colors">Preencha os detalhes abaixo para deixar o Gemini criar o conteúdo perfeito para suas redes sociais.</p>
              </div>
             <InputForm 
+              key={formResetKey} // Chave para forçar remontagem e limpar campos
               onSubmit={handleFormSubmit} 
               isLoading={isGenerating} 
               savedPosts={savedPosts} 
