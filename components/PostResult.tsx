@@ -10,6 +10,24 @@ const PostResult: React.FC<PostResultProps> = ({ content }) => {
     navigator.clipboard.writeText(text);
   };
 
+  const getFullContentText = () => {
+    return `${content.title}
+
+${content.caption}
+
+Hashtags:
+${content.hashtags.join(' ')}
+
+---
+Variações
+
+Versão Curta:
+${content.variations.short_version}
+
+Versão Engraçada:
+${content.variations.funny_version}`;
+  };
+
   const CopyButton = ({ text, onClick, colorClass = "bg-gray-100 hover:bg-gray-200 text-gray-600" }: { text: string, onClick: () => void, colorClass?: string }) => (
     <button
       onClick={onClick}
@@ -29,18 +47,32 @@ const PostResult: React.FC<PostResultProps> = ({ content }) => {
         <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
           <span>📝</span> Post Gerado
         </h3>
+        
         <button
-          onClick={() => copyToClipboard(`${content.title}\n\n${content.caption}`)}
-          className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center gap-2"
+          onClick={() => copyToClipboard(getFullContentText())}
+          className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center justify-center gap-2 border border-indigo-100"
+          title="Copiar Post Completo (Título, Legenda, Tags e Variações)"
         >
-          Copiar Texto
+          Copiar Tudo
         </button>
       </div>
 
       <div className="space-y-6 flex-grow overflow-y-auto pr-2 custom-scrollbar">
         {/* Título */}
         <div>
-          <label className="text-xs uppercase tracking-wider text-gray-400 font-bold mb-1 block">Título</label>
+          <div className="flex justify-between items-end mb-1">
+            <label className="text-xs uppercase tracking-wider text-gray-400 font-bold">Título</label>
+            <button
+                onClick={() => copyToClipboard(`${content.title}\n\n${content.caption}`)}
+                className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1.5 rounded-lg transition-all transform active:scale-95 font-medium flex items-center gap-1 border border-gray-200"
+                title="Copiar Título e Legenda"
+              >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+              Copiar Título+Legenda
+            </button>
+          </div>
           <p className="text-lg font-bold text-gray-900 leading-tight">{content.title}</p>
         </div>
 
