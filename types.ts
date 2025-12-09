@@ -13,6 +13,7 @@ export interface PostVariations {
 
 export interface GeneratedPostContent {
   title: string;
+  title_variations: string[];
   caption: string;
   hashtags: string[];
   visual_prompt: string;

@@ -51,7 +51,7 @@ ${content.variations.funny_version}`;
     text: string, 
     contentToCopy: string, 
     id: string, 
-    variant?: "default" | "ghost" | "blue" | "amber" | "purple",
+    variant?: "default" | "ghost" | "blue" | "amber" | "purple" | "green",
     className?: string
   }) => {
     const isCopied = copiedId === id;
@@ -72,6 +72,9 @@ ${content.variations.funny_version}`;
           break;
         case "purple":
           colorClass = "bg-purple-100 hover:bg-purple-200 text-purple-800 border-purple-200/50 dark:bg-purple-800/40 dark:hover:bg-purple-800/60 dark:text-purple-200 dark:border-purple-700";
+          break;
+        case "green":
+          colorClass = "bg-green-50 hover:bg-green-100 text-green-700 border-green-200/50 dark:bg-green-900/20 dark:hover:bg-green-900/40 dark:text-green-300 dark:border-green-800";
           break;
         default:
           colorClass = "bg-gray-100 hover:bg-gray-200 text-gray-600 border-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300 dark:border-gray-600";
@@ -197,7 +200,7 @@ ${content.variations.funny_version}`;
           </div>
         </section>
 
-        {/* SEÇÃO 2: HASHTAGS (Card Visualmente Distinto) */}
+        {/* SEÇÃO 2: HASHTAGS */}
         <section className="bg-white dark:bg-gray-800 rounded-xl border border-blue-100 dark:border-blue-900/30 shadow-sm overflow-hidden">
            <div className="bg-blue-50/30 dark:bg-blue-900/10 px-4 py-3 border-b border-blue-50 dark:border-blue-900/20 flex justify-between items-center">
              <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1">
@@ -221,7 +224,7 @@ ${content.variations.funny_version}`;
           </div>
         </section>
 
-        {/* SEÇÃO 3: VARIAÇÕES (Grid de Cards) */}
+        {/* SEÇÃO 3: VARIAÇÕES */}
         <section>
           <div className="flex items-center gap-3 mb-3 pl-1">
             <span className="h-px bg-gray-200 dark:bg-gray-700 flex-grow"></span>
@@ -230,6 +233,32 @@ ${content.variations.funny_version}`;
           </div>
           
           <div className="grid gap-4">
+            
+            {/* NOVAS VARIAÇÕES DE TÍTULO */}
+            {content.title_variations && content.title_variations.length > 0 && (
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-green-100 dark:border-green-900/30 shadow-sm transition-all hover:border-green-200 dark:hover:border-green-800">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="flex items-center gap-2 text-xs font-bold text-green-700 dark:text-green-400 uppercase tracking-wide">
+                     <span className="w-2 h-2 rounded-full bg-green-400"></span> Ideias de Títulos
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {content.title_variations.map((title, idx) => (
+                    <div key={idx} className="flex justify-between items-center group/item p-2 hover:bg-green-50 dark:hover:bg-green-900/10 rounded-lg transition-colors border border-transparent hover:border-green-100 dark:hover:border-green-800/30">
+                      <span className="text-sm text-gray-700 dark:text-gray-300 leading-tight">{title}</span>
+                      <CopyButton 
+                        text="Copiar" 
+                        contentToCopy={title}
+                        id={`title_var_${idx}`}
+                        variant="green"
+                        className="opacity-0 group-hover/item:opacity-100 transition-opacity"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Versão Curta */}
             <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-amber-100 dark:border-amber-900/30 shadow-sm transition-all hover:border-amber-200 dark:hover:border-amber-800 relative group">
               <div className="flex justify-between items-center mb-3">

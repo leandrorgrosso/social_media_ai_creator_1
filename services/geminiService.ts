@@ -3,7 +3,7 @@ import { SocialPostInput, GeneratedPostContent, AspectRatio, ImageSize } from ".
 
 const SYSTEM_INSTRUCTION = `
 Você é um Criador Profissional de Conteúdo para Redes Sociais, especialista em Instagram e TikTok.
-Sua tarefa é gerar um post completo com legenda, título, hashtags e uma ideia de imagem a partir de um tema fornecido pelo usuário.
+Sua tarefa é gerar um post completo com legenda, título principal, 5 variações de títulos (hooks), hashtags e uma ideia de imagem a partir de um tema fornecido pelo usuário.
 
 O conteúdo deve ser objetivo, natural, com foco em engajamento.
 A saída deve SEMPRE seguir o JSON de resposta definido pelo schema.
@@ -17,12 +17,18 @@ Nunca use markdown.
 As hashtags devem ser específicas e relevantes para o nicho.
 A legenda deve ter um gancho inicial, desenvolvimento e um CTA leve.
 O campo visual_prompt deve descrever uma imagem clara, específica e útil para modelos de geração visual.
+O campo title_variations deve conter exatas 5 opções de títulos alternativos (hooks) altamente engajadores.
 `;
 
 const RESPONSE_SCHEMA: Schema = {
   type: Type.OBJECT,
   properties: {
     title: { type: Type.STRING },
+    title_variations: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      description: "5 variações de títulos chamativos (hooks) para o post.",
+    },
     caption: { type: Type.STRING },
     hashtags: {
       type: Type.ARRAY,
@@ -38,7 +44,7 @@ const RESPONSE_SCHEMA: Schema = {
       required: ["short_version", "funny_version"],
     },
   },
-  required: ["title", "caption", "hashtags", "visual_prompt", "variations"],
+  required: ["title", "title_variations", "caption", "hashtags", "visual_prompt", "variations"],
 };
 
 // Validação de segurança da chave
