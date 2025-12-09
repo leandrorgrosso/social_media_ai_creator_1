@@ -2,13 +2,19 @@ import React, { useState } from 'react';
 import InputForm from './components/InputForm';
 import PostResult from './components/PostResult';
 import ImageGenerator from './components/ImageGenerator';
+import LoginScreen from './components/LoginScreen';
 import { SocialPostInput, GeneratedPostContent } from './types';
 import { generatePostContent } from './services/geminiService';
 
-const App: React.FC = () => {
+export function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [content, setContent] = useState<GeneratedPostContent | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const handleLogin = () => {
+    setIsLoggedIn(true);
+  };
 
   const handleFormSubmit = async (inputData: SocialPostInput) => {
     setIsLoading(true);
@@ -32,8 +38,12 @@ const App: React.FC = () => {
     }
   };
 
+  if (!isLoggedIn) {
+    return <LoginScreen onLogin={handleLogin} />;
+  }
+
   return (
-    <div className="min-h-screen bg-[#f8f9fa] pb-20">
+    <div className="min-h-screen bg-[#f8f9fa] pb-20 animate-in fade-in duration-700">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -45,6 +55,12 @@ const App: React.FC = () => {
               Criador de Posts
             </h1>
           </div>
+          <button 
+            onClick={() => setIsLoggedIn(false)}
+            className="text-sm text-gray-500 hover:text-purple-600 font-medium transition-colors"
+          >
+            Sair
+          </button>
         </div>
       </header>
 
@@ -105,6 +121,4 @@ const App: React.FC = () => {
       </main>
     </div>
   );
-};
-
-export default App;
+}
