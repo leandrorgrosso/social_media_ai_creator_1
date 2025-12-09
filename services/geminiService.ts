@@ -41,19 +41,9 @@ const RESPONSE_SCHEMA: Schema = {
   required: ["title", "caption", "hashtags", "visual_prompt", "variations"],
 };
 
-// 🔑 pega do Vite (frontend)
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
-
-if (!GEMINI_API_KEY) {
-  throw new Error("VITE_GEMINI_API_KEY não está definida. Configure no .env e na Vercel.");
-}
-
-// Reutiliza um único client
-const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-
-export const generatePostContent = async (
-  input: SocialPostInput
-): Promise<GeneratedPostContent> => {
+export const generatePostContent = async (input: SocialPostInput): Promise<GeneratedPostContent> => {
+  // Inicializa o cliente dentro da função para garantir o uso da chave mais recente
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const userInputJSON = JSON.stringify(input);
 
   try {
@@ -76,18 +66,13 @@ export const generatePostContent = async (
   }
 };
 
-async function callImageModel(
-  ai: GoogleGenAI,
-  model: string,
-  prompt: string,
-  config: any
-): Promise<string> {
+async function callImageModel(ai: GoogleGenAI, model: string, prompt: string, config: any): Promise<string> {
   const response = await ai.models.generateContent({
-    model,
+    model: model,
     contents: {
       parts: [{ text: prompt }],
     },
-    config,
+    config: config,
   });
 
   for (const part of response.candidates?.[0]?.content?.parts || []) {
@@ -103,13 +88,17 @@ export const generatePostImage = async (
   aspectRatio: AspectRatio,
   size: ImageSize
 ): Promise<string> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
+  // Seleciona o modelo baseado na resolução solicitada
   const isHighRes = size === ImageSize.SIZE_2K || size === ImageSize.SIZE_4K;
-
-  let model = isHighRes ? "gemini-3-pro-image-preview" : "gemini-2.5-flash-image";
-
+  
+  // Tenta primeiro com o modelo solicitado ou apropriado
+  let model = isHighRes ? 'gemini-3-pro-image-preview' : 'gemini-2.5-flash-image';
+  
   let config: any = {
     imageConfig: {
-      aspectRatio,
+      aspectRatio: aspectRatio,
     },
   };
 
@@ -122,26 +111,24 @@ export const generatePostImage = async (
   } catch (error: any) {
     console.warn(`Erro na tentativa inicial com modelo ${model}:`, error);
 
-    if (
-      isHighRes &&
-      (error.message?.includes("403") ||
-        error.status === 403 ||
-        error.status === "PERMISSION_DENIED")
-    ) {
+    // Se falhar com erro de permissão (403) ou outro erro e estávamos tentando o modelo Pro,
+    // faz fallback para o modelo Flash (padrão)
+    if (isHighRes && (error.message?.includes('403') || error.status === 403 || error.status === 'PERMISSION_DENIED')) {
       console.log("Tentando fallback para gemini-2.5-flash-image...");
-      model = "gemini-2.5-flash-image";
+      model = 'gemini-2.5-flash-image';
       config = {
         imageConfig: {
-          aspectRatio,
+          aspectRatio: aspectRatio,
+          // Remove imageSize pois flash-image não suporta ou ignora, e queremos evitar erros
         },
       };
-
+      
       try {
         return await callImageModel(ai, model, prompt, config);
       } catch (fallbackError: any) {
         console.error("Erro no fallback:", fallbackError);
-        if (fallbackError.message) {
-          throw new Error(`Erro ao gerar imagem (Fallback): ${fallbackError.message}`);
+         if (fallbackError.message) {
+            throw new Error(`Erro ao gerar imagem (Fallback): ${fallbackError.message}`);
         }
         throw fallbackError;
       }
