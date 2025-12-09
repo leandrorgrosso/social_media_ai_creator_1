@@ -295,7 +295,11 @@ export function App() {
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 transition-colors">Defina seu Post</h2>
                 <p className="text-gray-500 dark:text-gray-400 text-sm transition-colors">Preencha os detalhes abaixo para deixar o Gemini criar o conteúdo perfeito para suas redes sociais.</p>
              </div>
-            <InputForm onSubmit={handleFormSubmit} isLoading={isGenerating} />
+            <InputForm 
+              onSubmit={handleFormSubmit} 
+              isLoading={isGenerating} 
+              savedPosts={savedPosts} 
+            />
             {error && (
                 <div className="mt-4 p-4 bg-red-100 dark:bg-red-900/30 border-l-4 border-red-500 text-red-700 dark:text-red-300 rounded-md animate-in fade-in slide-in-from-top-2">
                     <p className="font-bold text-sm uppercase mb-1">Atenção</p>
