@@ -18,6 +18,11 @@ export interface GeneratedPostContent {
   hashtags: string[];
   visual_prompt: string;
   variations: PostVariations;
+  // Configurações de imagem salvas junto com o post
+  imageOptions?: {
+    aspectRatio: AspectRatio;
+    size: ImageSize;
+  };
 }
 
 export interface SavedPost {

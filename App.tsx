@@ -7,9 +7,14 @@ import ImageGenerator from './components/ImageGenerator';
 import LoginScreen from './components/LoginScreen';
 import UpdatePasswordScreen from './components/UpdatePasswordScreen';
 import HistorySidebar from './components/HistorySidebar';
-import { SocialPostInput, GeneratedPostContent, SavedPost } from './types';
+import { SocialPostInput, GeneratedPostContent, SavedPost, AspectRatio, ImageSize } from './types';
 import { generatePostContent } from './services/geminiService';
 import { postService } from './services/postService';
+
+const IMG_STORAGE_KEYS = {
+  RATIO: 'img_gen_ratio',
+  SIZE: 'img_gen_size'
+};
 
 export function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -19,6 +24,23 @@ export function App() {
   const [content, setContent] = useState<GeneratedPostContent | null>(null);
   const [error, setError] = useState<string | null>(null);
   
+  // Estados para Configuração de Imagem (Elevado do ImageGenerator)
+  const [imgAspectRatio, setImgAspectRatio] = useState<AspectRatio>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(IMG_STORAGE_KEYS.RATIO);
+      return (saved as AspectRatio) || AspectRatio.SQUARE;
+    }
+    return AspectRatio.SQUARE;
+  });
+
+  const [imgSize, setImgSize] = useState<ImageSize>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(IMG_STORAGE_KEYS.SIZE);
+      return (saved as ImageSize) || ImageSize.SIZE_1K;
+    }
+    return ImageSize.SIZE_1K;
+  });
+
   // Estados para CRUD
   const [savedPosts, setSavedPosts] = useState<SavedPost[]>([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState(false);
@@ -40,6 +62,17 @@ export function App() {
     }
     return 'light';
   });
+
+  // Handlers para mudança de configuração de imagem
+  const handleRatioChange = (ratio: AspectRatio) => {
+    setImgAspectRatio(ratio);
+    localStorage.setItem(IMG_STORAGE_KEYS.RATIO, ratio);
+  };
+
+  const handleSizeChange = (size: ImageSize) => {
+    setImgSize(size);
+    localStorage.setItem(IMG_STORAGE_KEYS.SIZE, size);
+  };
 
   // Efeito para aplicar a classe 'dark' ao HTML e salvar no localStorage
   useEffect(() => {
@@ -119,6 +152,9 @@ export function App() {
     setFormResetKey(prev => prev + 1);
     setIsHistoryOpen(false);
     
+    // Resetar configurações de imagem para o que está no localStorage (ou manter atual, conforme preferência)
+    // Opção: Manter o estado atual como "última usada"
+    
     // Scroll para o topo suavemente
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -160,17 +196,30 @@ export function App() {
     
     setIsSaving(true);
     try {
+      // Injeta as configurações de imagem atuais no objeto de conteúdo antes de salvar
+      const contentToSave: GeneratedPostContent = {
+        ...content,
+        imageOptions: {
+          aspectRatio: imgAspectRatio,
+          size: imgSize
+        }
+      };
+
       if (currentPostId) {
         // UPDATE (Se já tem ID, atualiza)
-        const updatedPost = await postService.updatePost(currentPostId, content);
+        const updatedPost = await postService.updatePost(currentPostId, contentToSave);
         setSavedPosts(prev => prev.map(p => p.id === currentPostId ? updatedPost : p));
+        // Atualiza o estado local do content também
+        setContent(updatedPost.content);
       } else {
         // CREATE (Se não tem ID, cria novo)
         // Usa o input anterior como tópico ou o título gerado se input não disponível
         const topic = lastInputData?.tema || content.title.substring(0, 50);
-        const newPost = await postService.savePost(topic, content);
+        const newPost = await postService.savePost(topic, contentToSave);
         setSavedPosts(prev => [newPost, ...prev]);
         setCurrentPostId(newPost.id);
+        // Atualiza o estado local do content também
+        setContent(newPost.content);
       }
     } catch (err: any) {
       console.error('Erro ao salvar:', err);
@@ -197,6 +246,13 @@ export function App() {
   const handleSelectPost = (post: SavedPost) => {
     setContent(post.content);
     setCurrentPostId(post.id);
+    
+    // Recupera as configurações de imagem do post salvo, se existirem
+    if (post.content.imageOptions) {
+      setImgAspectRatio(post.content.imageOptions.aspectRatio);
+      setImgSize(post.content.imageOptions.size);
+    }
+
     // Mobile: fechar sidebar ao selecionar
     if (window.innerWidth < 1024) {
       setIsHistoryOpen(false);
@@ -380,7 +436,13 @@ export function App() {
                   />
                 </div>
                 <div className="h-full">
-                  <ImageGenerator initialPrompt={content.visual_prompt} />
+                  <ImageGenerator 
+                    initialPrompt={content.visual_prompt} 
+                    aspectRatio={imgAspectRatio}
+                    size={imgSize}
+                    onAspectRatioChange={handleRatioChange}
+                    onSizeChange={handleSizeChange}
+                  />
                 </div>
               </div>
             )}

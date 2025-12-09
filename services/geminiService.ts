@@ -120,6 +120,42 @@ export const generatePostContent = async (
   });
 };
 
+/**
+ * Melhora um prompt de imagem adicionando detalhes artísticos e técnicos.
+ */
+export const enhanceImagePrompt = async (currentPrompt: string): Promise<string> => {
+  const ENHANCEMENT_INSTRUCTION = `
+    Atue como um Especialista em Engenharia de Prompt para IA Generativa (Midjourney/DALL-E).
+    Sua tarefa é reescrever e enriquecer o prompt do usuário para criar uma imagem visualmente impactante para redes sociais.
+    
+    Com base no assunto do prompt original, adicione criativamente:
+    1. Um Estilo Artístico adequado (ex: Fotorealismo, Ilustração 3D, Minimalista, Cyberpunk, Aquarela, Pop Art).
+    2. Detalhes de Iluminação (ex: Golden Hour, Studio Lighting, Soft Softbox, Neon Lights).
+    3. Paleta de Cores ou Mood (ex: Vibrante, Pastel, Dark & Moody, Cores da marca).
+    4. Detalhes Técnicos (ex: 4k, high resolution, highly detailed, sharp focus).
+    
+    Mantenha o prompt em Inglês (pois gera melhores resultados em modelos de imagem) ou Português (se o original for muito específico culturalmente), mas priorize a qualidade visual.
+    Retorne APENAS o texto do novo prompt melhorado, sem explicações ou aspas.
+  `;
+
+  return withRetry(async () => {
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: currentPrompt,
+        config: {
+          systemInstruction: ENHANCEMENT_INSTRUCTION,
+        },
+      });
+
+      return response.text || currentPrompt;
+    } catch (error) {
+      console.error("Erro ao melhorar prompt:", error);
+      return currentPrompt; // Fallback para o original em caso de erro
+    }
+  });
+};
+
 async function callImageModel(
   ai: GoogleGenAI,
   model: string,
