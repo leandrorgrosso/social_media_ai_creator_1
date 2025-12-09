@@ -12,6 +12,9 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react({ jsxRuntime: 'classic' })],
+    server: {
+      port: 3000,
+    },
     define: {
       // Define a variável globalmente
       'process.env.API_KEY': JSON.stringify(apiKey)

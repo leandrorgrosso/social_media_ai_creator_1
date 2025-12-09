@@ -21,11 +21,13 @@ const LoginScreen: React.FC<LoginScreenProps> = () => {
     setIsLoading(true);
 
     try {
+      // Usamos window.location.origin para garantir que o link aponte para a URL atual
+      // O vite.config.ts foi ajustado para rodar na porta 3000 para alinhar com o padrão do Supabase
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: window.location.origin,
       });
       if (error) throw error;
-      setMessage('Se o e-mail estiver cadastrado, você receberá um link de recuperação em instantes.');
+      setMessage('Se o e-mail estiver cadastrado, você receberá um link de recuperação em instantes. Verifique sua caixa de spam.');
     } catch (err: any) {
       setError(err.message || 'Erro ao enviar email de recuperação.');
     } finally {
