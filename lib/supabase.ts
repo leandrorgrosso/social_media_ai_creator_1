@@ -32,3 +32,24 @@ export const supabase = createClient(
   supabaseUrl,
   supabaseAnonKey
 );
+
+/**
+ * Determina a URL de redirecionamento correta baseada no ambiente.
+ * Prioridade:
+ * 1. Variável de ambiente VITE_SITE_URL (Defina isso na Vercel para produção)
+ * 2. window.location.origin (Automático do navegador)
+ * 3. Fallback para localhost
+ */
+export const getRedirectUrl = () => {
+  const siteUrl = getEnvVar('VITE_SITE_URL', '');
+  
+  if (siteUrl) {
+    return siteUrl;
+  }
+  
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+
+  return 'http://localhost:3000';
+};

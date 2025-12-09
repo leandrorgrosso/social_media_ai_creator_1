@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, getRedirectUrl } from '../lib/supabase';
 
 interface LoginScreenProps {
   onLogin?: () => void; // Mantido para compatibilidade, mas o App agora observa a sessão
@@ -21,14 +21,18 @@ const LoginScreen: React.FC<LoginScreenProps> = () => {
     setIsLoading(true);
 
     try {
-      // Usamos window.location.origin para garantir que o link aponte para a URL atual
-      // O vite.config.ts foi ajustado para rodar na porta 3000 para alinhar com o padrão do Supabase
+      const redirectUrl = getRedirectUrl();
+      console.log('Enviando email de recuperação com redirect para:', redirectUrl);
+
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin,
+        redirectTo: redirectUrl,
       });
+      
       if (error) throw error;
+      
       setMessage('Se o e-mail estiver cadastrado, você receberá um link de recuperação em instantes. Verifique sua caixa de spam.');
     } catch (err: any) {
+      console.error('Erro no reset:', err);
       setError(err.message || 'Erro ao enviar email de recuperação.');
     } finally {
       setIsLoading(false);
