@@ -19,6 +19,14 @@ export interface GeneratedPostContent {
   variations: PostVariations;
 }
 
+export interface SavedPost {
+  id: string;
+  user_id: string;
+  topic: string;
+  content: GeneratedPostContent;
+  created_at: string;
+}
+
 export enum AspectRatio {
   SQUARE = '1:1',
   PORTRAIT_3_4 = '3:4',

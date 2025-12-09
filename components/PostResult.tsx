@@ -3,9 +3,12 @@ import { GeneratedPostContent } from '../types';
 
 interface PostResultProps {
   content: GeneratedPostContent;
+  onSave?: () => void;
+  isSaved?: boolean;
+  isSaving?: boolean;
 }
 
-const PostResult: React.FC<PostResultProps> = ({ content }) => {
+const PostResult: React.FC<PostResultProps> = ({ content, onSave, isSaved, isSaving }) => {
   // Estado para rastrear qual botão está exibindo o feedback de "Copiado!"
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -85,27 +88,62 @@ ${content.variations.funny_version}`;
           <span>📝</span> Post Gerado
         </h3>
         
-        <button
-          onClick={() => handleCopy(getFullContentText(), 'full_content')}
-          disabled={isFullCopied}
-          className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center justify-center gap-2 border ${
-            isFullCopied
-              ? "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800"
-              : "bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 dark:text-indigo-300 dark:border-indigo-800"
-          }`}
-          title="Copiar Post Completo (Título, Legenda, Tags e Variações)"
-        >
-          {isFullCopied ? (
-            <>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span>Copiado!</span>
-            </>
-          ) : (
-             "Copiar Tudo"
-          )}
-        </button>
+        <div className="flex items-center gap-2">
+           {onSave && (
+            <button
+              onClick={onSave}
+              disabled={isSaving}
+              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center justify-center gap-2 border ${
+                isSaved
+                  ? "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800"
+                  : "bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 dark:border-gray-600"
+              }`}
+            >
+              {isSaving ? (
+                 <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              ) : isSaved ? (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Salvo</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                  </svg>
+                  <span>Salvar</span>
+                </>
+              )}
+            </button>
+           )}
+
+          <button
+            onClick={() => handleCopy(getFullContentText(), 'full_content')}
+            disabled={isFullCopied}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center justify-center gap-2 border ${
+              isFullCopied
+                ? "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800"
+                : "bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 dark:text-indigo-300 dark:border-indigo-800"
+            }`}
+            title="Copiar Post Completo"
+          >
+            {isFullCopied ? (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Copiado!</span>
+              </>
+            ) : (
+               "Copiar Tudo"
+            )}
+          </button>
+        </div>
       </div>
 
       <div className="space-y-6 flex-grow overflow-y-auto pr-2 custom-scrollbar">

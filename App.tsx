@@ -6,8 +6,10 @@ import PostResult from './components/PostResult';
 import ImageGenerator from './components/ImageGenerator';
 import LoginScreen from './components/LoginScreen';
 import UpdatePasswordScreen from './components/UpdatePasswordScreen';
-import { SocialPostInput, GeneratedPostContent } from './types';
+import HistorySidebar from './components/HistorySidebar';
+import { SocialPostInput, GeneratedPostContent, SavedPost } from './types';
 import { generatePostContent } from './services/geminiService';
+import { postService } from './services/postService';
 
 export function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -16,6 +18,14 @@ export function App() {
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [content, setContent] = useState<GeneratedPostContent | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  // Estados para CRUD
+  const [savedPosts, setSavedPosts] = useState<SavedPost[]>([]);
+  const [isLoadingPosts, setIsLoadingPosts] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [currentPostId, setCurrentPostId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastInputData, setLastInputData] = useState<SocialPostInput | null>(null);
   
   // Estado do Tema (Dark Mode)
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -66,9 +76,30 @@ export function App() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Carregar posts salvos quando o usuário logar
+  useEffect(() => {
+    if (session?.user) {
+      loadSavedPosts();
+    }
+  }, [session]);
+
+  const loadSavedPosts = async () => {
+    setIsLoadingPosts(true);
+    try {
+      const posts = await postService.getPosts();
+      setSavedPosts(posts);
+    } catch (err) {
+      console.error('Erro ao carregar posts:', err);
+    } finally {
+      setIsLoadingPosts(false);
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setIsRecoveryMode(false);
+    setSavedPosts([]);
+    setContent(null);
   };
 
   const handlePasswordUpdated = () => {
@@ -80,6 +111,8 @@ export function App() {
     setIsGenerating(true);
     setError(null);
     setContent(null);
+    setCurrentPostId(null); // Resetar ID pois é um novo post gerado
+    setLastInputData(inputData);
 
     try {
       const result = await generatePostContent(inputData);
@@ -95,6 +128,54 @@ export function App() {
       setError(errorMsg);
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleSavePost = async () => {
+    if (!content) return;
+    
+    setIsSaving(true);
+    try {
+      if (currentPostId) {
+        // UPDATE (Se já tem ID, atualiza)
+        const updatedPost = await postService.updatePost(currentPostId, content);
+        setSavedPosts(prev => prev.map(p => p.id === currentPostId ? updatedPost : p));
+      } else {
+        // CREATE (Se não tem ID, cria novo)
+        // Usa o input anterior como tópico ou o título gerado se input não disponível
+        const topic = lastInputData?.tema || content.title.substring(0, 50);
+        const newPost = await postService.savePost(topic, content);
+        setSavedPosts(prev => [newPost, ...prev]);
+        setCurrentPostId(newPost.id);
+      }
+    } catch (err: any) {
+      console.error('Erro ao salvar:', err);
+      setError('Erro ao salvar o post. Tente novamente.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeletePost = async (id: string) => {
+    try {
+      await postService.deletePost(id);
+      setSavedPosts(prev => prev.filter(p => p.id !== id));
+      if (currentPostId === id) {
+        setContent(null);
+        setCurrentPostId(null);
+      }
+    } catch (err) {
+      console.error('Erro ao excluir:', err);
+      setError('Erro ao excluir post.');
+    }
+  };
+
+  const handleSelectPost = (post: SavedPost) => {
+    setContent(post.content);
+    setCurrentPostId(post.id);
+    // Mobile: fechar sidebar ao selecionar
+    if (window.innerWidth < 1024) {
+      setIsHistoryOpen(false);
     }
   };
 
@@ -130,6 +211,16 @@ export function App() {
       <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
+            {/* Mobile Menu Button */}
+            <button 
+              onClick={() => setIsHistoryOpen(!isHistoryOpen)}
+              className="p-2 -ml-2 mr-1 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 lg:hidden"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+
             <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold shadow-md">
               AI
             </div>
@@ -138,6 +229,18 @@ export function App() {
             </h1>
           </div>
           <div className="flex items-center gap-4">
+              <button
+                onClick={() => setIsHistoryOpen(!isHistoryOpen)}
+                className={`hidden lg:flex items-center gap-2 text-sm font-medium transition-colors ${isHistoryOpen ? 'text-purple-600 dark:text-purple-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Histórico</span>
+              </button>
+
+              <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 hidden lg:block"></div>
+
               <span className="text-xs text-gray-400 hidden sm:inline-block dark:text-gray-500">{session.user.email}</span>
               
               {/* Theme Toggle Button */}
@@ -171,9 +274,20 @@ export function App() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex items-start gap-6">
         
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Sidebar */}
+        <HistorySidebar 
+          posts={savedPosts}
+          isLoading={isLoadingPosts}
+          onSelectPost={handleSelectPost}
+          onDeletePost={handleDeletePost}
+          isOpen={isHistoryOpen}
+          onClose={() => setIsHistoryOpen(false)}
+          selectedPostId={currentPostId}
+        />
+
+        <div className="flex-grow grid grid-cols-1 lg:grid-cols-12 gap-8 w-full">
           
           {/* Left Column: Input Form */}
           <div className="lg:col-span-4 lg:sticky lg:top-24 h-fit">
@@ -215,7 +329,12 @@ export function App() {
             {content && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="h-full">
-                  <PostResult content={content} />
+                  <PostResult 
+                    content={content} 
+                    onSave={handleSavePost}
+                    isSaving={isSaving}
+                    isSaved={!!currentPostId}
+                  />
                 </div>
                 <div className="h-full">
                   <ImageGenerator initialPrompt={content.visual_prompt} />
