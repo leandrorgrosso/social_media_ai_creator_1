@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from './lib/supabase';
+import { Session } from '@supabase/supabase-js';
 import InputForm from './components/InputForm';
 import PostResult from './components/PostResult';
 import ImageGenerator from './components/ImageGenerator';
@@ -7,17 +9,35 @@ import { SocialPostInput, GeneratedPostContent } from './types';
 import { generatePostContent } from './services/geminiService';
 
 export function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoadingSession, setIsLoadingSession] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [content, setContent] = useState<GeneratedPostContent | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = () => {
-    setIsLoggedIn(true);
+  useEffect(() => {
+    // Verificar sessão atual
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setIsLoadingSession(false);
+    });
+
+    // Ouvir mudanças de autenticação
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
   };
 
   const handleFormSubmit = async (inputData: SocialPostInput) => {
-    setIsLoading(true);
+    setIsGenerating(true);
     setError(null);
     setContent(null);
 
@@ -34,12 +54,20 @@ export function App() {
 
       setError(errorMsg);
     } finally {
-      setIsLoading(false);
+      setIsGenerating(false);
     }
   };
 
-  if (!isLoggedIn) {
-    return <LoginScreen onLogin={handleLogin} />;
+  if (isLoadingSession) {
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-[#f3f4f6]">
+            <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
+        </div>
+    );
+  }
+
+  if (!session) {
+    return <LoginScreen />;
   }
 
   return (
@@ -55,12 +83,15 @@ export function App() {
               Criador de Posts
             </h1>
           </div>
-          <button 
-            onClick={() => setIsLoggedIn(false)}
-            className="text-sm text-gray-500 hover:text-purple-600 font-medium transition-colors"
-          >
-            Sair
-          </button>
+          <div className="flex items-center gap-4">
+              <span className="text-xs text-gray-400 hidden sm:inline-block">{session.user.email}</span>
+              <button 
+                onClick={handleLogout}
+                className="text-sm text-gray-500 hover:text-purple-600 font-medium transition-colors"
+              >
+                Sair
+              </button>
+          </div>
         </div>
       </header>
 
@@ -74,7 +105,7 @@ export function App() {
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Defina seu Post</h2>
                 <p className="text-gray-500 text-sm">Preencha os detalhes abaixo para deixar o Gemini criar o conteúdo perfeito para suas redes sociais.</p>
              </div>
-            <InputForm onSubmit={handleFormSubmit} isLoading={isLoading} />
+            <InputForm onSubmit={handleFormSubmit} isLoading={isGenerating} />
             {error && (
                 <div className="mt-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded-md animate-in fade-in slide-in-from-top-2">
                     <p className="font-bold text-sm uppercase mb-1">Atenção</p>
@@ -85,7 +116,7 @@ export function App() {
 
           {/* Right Column: Results */}
           <div className="lg:col-span-8">
-             {!content && !isLoading && (
+             {!content && !isGenerating && (
                 <div className="flex flex-col items-center justify-center h-[500px] bg-white rounded-3xl border-2 border-dashed border-gray-200 text-center p-8">
                     <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
                         <span className="text-4xl">✨</span>
@@ -95,7 +126,7 @@ export function App() {
                 </div>
              )}
 
-             {isLoading && (
+             {isGenerating && (
                  <div className="flex flex-col items-center justify-center h-[500px] space-y-4">
                     <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
                     <p className="text-purple-600 font-medium animate-pulse">

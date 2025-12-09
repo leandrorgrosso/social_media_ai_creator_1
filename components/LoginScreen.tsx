@@ -1,30 +1,45 @@
 import React, { useState } from 'react';
+import { supabase } from '../lib/supabase';
 
 interface LoginScreenProps {
-  onLogin: () => void;
+  onLogin?: () => void; // Mantido para compatibilidade, mas o App agora observa a sessão
 }
 
-const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
+const LoginScreen: React.FC<LoginScreenProps> = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false); // Alternar entre Login e Cadastro
+  const [message, setMessage] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setMessage('');
     setIsLoading(true);
 
-    // Simulação de delay de rede para sensação de autenticação real
-    setTimeout(() => {
-      if (email && password) {
-        setIsLoading(false);
-        onLogin();
+    try {
+      if (isSignUp) {
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+        if (signUpError) throw signUpError;
+        setMessage('Verifique seu e-mail para confirmar o cadastro!');
       } else {
-        setIsLoading(false);
-        setError('Por favor, preencha todos os campos.');
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (signInError) throw signInError;
+        // O redirecionamento acontece automaticamente via onAuthStateChange no App.tsx
       }
-    }, 1500);
+    } catch (err: any) {
+      setError(err.message || 'Ocorreu um erro na autenticação.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -40,11 +55,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
           <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4 shadow-lg shadow-purple-500/30">
             AI
           </div>
-          <h2 className="text-3xl font-bold text-gray-800">Bem-vindo de volta</h2>
-          <p className="text-gray-500 mt-2">Acesse seu estúdio criativo</p>
+          <h2 className="text-3xl font-bold text-gray-800">
+            {isSignUp ? 'Criar Conta' : 'Bem-vindo de volta'}
+          </h2>
+          <p className="text-gray-500 mt-2">
+            {isSignUp ? 'Comece a criar posts incríveis' : 'Acesse seu estúdio criativo'}
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleAuth} className="space-y-6">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1">Email</label>
             <input
@@ -53,13 +72,13 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 outline-none transition-all"
               placeholder="seu@email.com"
+              required
             />
           </div>
 
           <div>
             <div className="flex justify-between items-center mb-2 ml-1">
               <label className="block text-sm font-semibold text-gray-700">Senha</label>
-              <a href="#" className="text-sm text-purple-600 hover:text-purple-700 font-medium">Esqueceu?</a>
             </div>
             <input
               type="password"
@@ -67,12 +86,20 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 outline-none transition-all"
               placeholder="••••••••"
+              required
+              minLength={6}
             />
           </div>
 
           {error && (
             <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg text-center font-medium border border-red-100 animate-pulse">
               {error}
+            </div>
+          )}
+
+          {message && (
+            <div className="p-3 bg-green-50 text-green-600 text-sm rounded-lg text-center font-medium border border-green-100">
+              {message}
             </div>
           )}
 
@@ -91,16 +118,27 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Entrando...
+                {isSignUp ? 'Cadastrando...' : 'Entrando...'}
               </span>
             ) : (
-              'Entrar'
+              isSignUp ? 'Criar Conta' : 'Entrar'
             )}
           </button>
         </form>
         
         <p className="mt-8 text-center text-sm text-gray-500">
-          Não tem uma conta? <a href="#" className="text-purple-600 font-bold hover:underline">Criar conta</a>
+          {isSignUp ? 'Já tem uma conta?' : 'Não tem uma conta?'}{' '}
+          <button 
+            type="button"
+            onClick={() => {
+              setIsSignUp(!isSignUp);
+              setError('');
+              setMessage('');
+            }}
+            className="text-purple-600 font-bold hover:underline focus:outline-none"
+          >
+            {isSignUp ? 'Fazer Login' : 'Criar conta'}
+          </button>
         </p>
       </div>
     </div>
