@@ -7,6 +7,7 @@ import ImageGenerator from './components/ImageGenerator';
 import LoginScreen from './components/LoginScreen';
 import UpdatePasswordScreen from './components/UpdatePasswordScreen';
 import HistorySidebar from './components/HistorySidebar';
+import OnboardingTour from './components/OnboardingTour';
 import { SocialPostInput, GeneratedPostContent, SavedPost, AspectRatio, ImageSize } from './types';
 import { generatePostContent } from './services/geminiService';
 import { postService } from './services/postService';
@@ -16,6 +17,8 @@ const IMG_STORAGE_KEYS = {
   SIZE: 'img_gen_size'
 };
 
+const ONBOARDING_KEY = 'app_onboarding_completed';
+
 export function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
@@ -23,6 +26,7 @@ export function App() {
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [content, setContent] = useState<GeneratedPostContent | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   
   // Estados para Configuração de Imagem (Elevado do ImageGenerator)
   const [imgAspectRatio, setImgAspectRatio] = useState<AspectRatio>(() => {
@@ -113,11 +117,24 @@ export function App() {
   }, []);
 
   // Carregar posts salvos quando o usuário logar
+  // E verificar Onboarding
   useEffect(() => {
     if (session?.user) {
       loadSavedPosts();
+      
+      // Verifica se o usuário já viu o onboarding
+      const hasSeenOnboarding = localStorage.getItem(ONBOARDING_KEY);
+      if (!hasSeenOnboarding) {
+        // Pequeno delay para garantir que a UI carregou antes de abrir o modal
+        setTimeout(() => setShowOnboarding(true), 500);
+      }
     }
   }, [session]);
+
+  const handleCloseOnboarding = () => {
+    setShowOnboarding(false);
+    localStorage.setItem(ONBOARDING_KEY, 'true');
+  };
 
   const loadSavedPosts = async () => {
     setIsLoadingPosts(true);
@@ -295,6 +312,9 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900 pb-20 animate-in fade-in duration-700 transition-colors">
+      {/* Onboarding Tour */}
+      <OnboardingTour isOpen={showOnboarding} onClose={handleCloseOnboarding} />
+
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
