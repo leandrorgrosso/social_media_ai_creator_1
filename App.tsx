@@ -249,6 +249,7 @@ export function App() {
     } catch (err: any) {
       console.error('Erro ao salvar:', err);
       setError('Erro ao salvar o post. Tente novamente.');
+      throw err; // Propaga o erro para que o componente PostResult possa exibir o Toast de erro
     } finally {
       setIsSaving(false);
     }

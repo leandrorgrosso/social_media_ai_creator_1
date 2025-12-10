@@ -3,10 +3,16 @@ import { GeneratedPostContent } from '../types';
 
 interface PostResultProps {
   content: GeneratedPostContent;
-  onSave?: () => void;
+  onSave?: () => Promise<void> | void; // Atualizado para suportar Promise para feedback de erro/sucesso
   onContentUpdate?: (newContent: GeneratedPostContent) => void;
   isSaved?: boolean;
   isSaving?: boolean;
+}
+
+interface ToastState {
+  show: boolean;
+  message: string;
+  type: 'success' | 'error';
 }
 
 const PostResult: React.FC<PostResultProps> = ({ content, onSave, onContentUpdate, isSaved, isSaving }) => {
@@ -20,11 +26,24 @@ const PostResult: React.FC<PostResultProps> = ({ content, onSave, onContentUpdat
   // Estado para Modal de Compartilhamento
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
+  // Estado para Toast de Feedback
+  const [toast, setToast] = useState<ToastState>({ show: false, message: '', type: 'success' });
+
   // Sincronizar estado de edição quando o conteúdo muda
   useEffect(() => {
     setEditedCaption(content.caption);
     setIsEditing(false);
   }, [content]);
+
+  // Efeito para esconder o Toast automaticamente
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => {
+        setToast(prev => ({ ...prev, show: false }));
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast.show]);
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -54,6 +73,16 @@ const PostResult: React.FC<PostResultProps> = ({ content, onSave, onContentUpdat
 
   const getFullContentText = () => {
     return `${content.title}\n\n${content.caption}\n\nHashtags:\n${content.hashtags.join(' ')}\n\n---\nOutras Opções:\n\nCurta: ${content.variations.short_version}\n\nEngraçada: ${content.variations.funny_version}`;
+  };
+
+  const handleSaveClick = async () => {
+    if (!onSave) return;
+    try {
+      await onSave();
+      setToast({ show: true, message: 'Post salvo com sucesso!', type: 'success' });
+    } catch (error) {
+      setToast({ show: true, message: 'Erro ao salvar o post.', type: 'error' });
+    }
   };
 
   const handleShare = async () => {
@@ -204,6 +233,28 @@ const PostResult: React.FC<PostResultProps> = ({ content, onSave, onContentUpdat
 
   return (
     <>
+       {/* Toast Notification */}
+       {toast.show && (
+        <div className={`fixed top-24 left-1/2 transform -translate-x-1/2 z-[60] px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 animate-in slide-in-from-top-4 fade-in duration-300 max-w-sm w-full mx-4 border ${
+          toast.type === 'success' 
+            ? 'bg-green-600 text-white border-green-500' 
+            : 'bg-red-600 text-white border-red-500'
+        }`}>
+          <div className="flex-shrink-0">
+            {toast.type === 'success' ? (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            )}
+          </div>
+          <span className="font-medium text-sm">{toast.message}</span>
+        </div>
+      )}
+
       <div className="bg-white dark:bg-gray-800 shadow-xl rounded-2xl w-full border border-gray-100 dark:border-gray-700 h-full flex flex-col transition-colors overflow-hidden relative">
         
         {/* --- Global Toolbar --- */}
@@ -227,7 +278,7 @@ const PostResult: React.FC<PostResultProps> = ({ content, onSave, onContentUpdat
 
              {onSave && (
               <button
-                onClick={onSave}
+                onClick={handleSaveClick}
                 disabled={isSaving}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center justify-center gap-1.5 border ${
                   isSaved
