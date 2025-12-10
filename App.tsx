@@ -273,9 +273,17 @@ export function App() {
     setCurrentPostId(post.id);
     
     // Recupera as configurações de imagem do post salvo, se existirem
+    // Caso contrário, usa as preferências do usuário ou padrão (fallback para posts antigos)
     if (post.content.imageOptions) {
       setImgAspectRatio(post.content.imageOptions.aspectRatio);
       setImgSize(post.content.imageOptions.size);
+    } else {
+       // Tenta pegar do localStorage ou usa defaults
+       const savedRatio = typeof window !== 'undefined' ? localStorage.getItem(IMG_STORAGE_KEYS.RATIO) : null;
+       setImgAspectRatio((savedRatio as AspectRatio) || AspectRatio.SQUARE);
+
+       const savedSize = typeof window !== 'undefined' ? localStorage.getItem(IMG_STORAGE_KEYS.SIZE) : null;
+       setImgSize((savedSize as ImageSize) || ImageSize.SIZE_1K);
     }
 
     // Mobile: fechar sidebar ao selecionar
